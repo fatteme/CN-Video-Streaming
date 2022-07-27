@@ -1,3 +1,3 @@
-import User.EndUser
-import User.Admin
-import SuperAdmin
+import user.endUser
+import user.admin
+import user.superAdmin
