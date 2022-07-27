@@ -10,10 +10,12 @@ def client_handler(connection):
     while True:
         data = connection.recv(2048)
         message = data.decode('utf-8')
+        if message == EXIT_MESSAGE:
+            connection.sendall(str.encode(EXIT_MESSAGE))
+            break
+        
         reply = f'{message}'
         connection.sendall(str.encode(reply))
-        if message == EXIT_MESSAGE:
-            break
     connection.close()
 
 def accept_connections(ServerSocket):
