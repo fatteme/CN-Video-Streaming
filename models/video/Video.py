@@ -17,7 +17,7 @@ class Video:
             "title": self.title,
             "name_identifier": self.name_identifier,
             "owner": self.owner, 
-            "adrs": self.owner,
+            "adrs": self.adrs,
             "available": self.available,
             "likes": self.likes,
             "dislikes": self.dislikes,

@@ -3,7 +3,7 @@ class EndUser:
         EndUser.all_end_users.append(self)
         self.username = username 
         self.password = password
-        self.strike = 0
+        self.strikes = 0
         self.is_admin = is_admin
 
 
