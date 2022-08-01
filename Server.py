@@ -1,20 +1,21 @@
 import socket
 from _thread import *
 
-from constants import EXIT_MESSAGE, HOST, PORT
+from CommandHandler import CommandHandler
+from Constants import EXIT_MESSAGE, HOST, PORT
 
 ThreadCount = 0
+cmdHandler = CommandHandler()
 
 def client_handler(connection):
-    connection.send(str.encode(f'You are now connected to the replay server... Type {EXIT_MESSAGE} to exit.'))
+    connection.send(str.encode(f'You are now connected to the server...\nType {EXIT_MESSAGE} to exit.\nType help or ? for command list.'))
     while True:
         data = connection.recv(2048)
         message = data.decode('utf-8')
         if message == EXIT_MESSAGE:
             connection.sendall(str.encode(EXIT_MESSAGE))
             break
-        
-        reply = f'{message}'
+        reply = cmdHandler.onecmd(message) or "invalid command"
         connection.sendall(str.encode(reply))
     connection.close()
 

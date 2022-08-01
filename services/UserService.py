@@ -1,7 +1,8 @@
-from mysql import connector
 from models.user.Admin import Admin
 from models.user.EndUser import EndUser
-from utils import encrypt
+from mysql import connector
+from Utils import encrypt
+
 
 class UserService:
     def __init__(self, config):
