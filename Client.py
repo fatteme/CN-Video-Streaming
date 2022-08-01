@@ -23,6 +23,6 @@ while True:
     decodedRes = Response.decode('utf-8')
     if(decodedRes == EXIT_MESSAGE):
         break
-    print(f"Server response: {decodedRes}")
+    print(f"{decodedRes}")
 
 ClientSocket.close()
