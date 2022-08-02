@@ -2,6 +2,12 @@ from video.Video import Video
 import cv2
 import wave
 import os
+import pyaudio
+import queue
+import struct
+import traceback
+import socket
+
 
 def sendVideo():
     pass
@@ -66,19 +72,59 @@ class ServerVideo:
             vid.release()
             cv2.destroyAllWindows()
        
-     def saveVideo(self):
+     def saveVideo(self, frame):
+         pass
+
+     def saveAudio(self, frame):
          pass
             
      def receiveAudio(self):
-         pass
+
+        q = queue.Queue(maxsize=2000)
+
+        BUFF_SIZE = 65536
+        p = pyaudio.PyAudio()
+        CHUNK = 4 * 1024
+
+        while True:
+            try:
+                frame = self.audio_stream_socket.recv(4 * 1024)
+                self.saveAudio(frame)
+            except Exception as e:
+                break
 
      def receiveVideo(self):
-         pass
+         print("receiving video...")
+
+         data = b""
+         payload_size = struct.calcsize("Q")
+
+         try:
+             while True:
+                 while len(data) < payload_size:
+                     packet = self.video_stream_socket.recv(4 * 1024)  # 4K
+                     if not packet: break
+                     data += packet
+                 packed_msg_size = data[:payload_size]
+                 data = data[payload_size:]
+                 msg_size = struct.unpack("Q", packed_msg_size)[0]
+
+                 while len(data) < msg_size:
+                     data += self.video_stream_socket.recv(4 * 1024)
+                 frame_data = data[:msg_size]
+                 data = data[msg_size:]
+                 frame = pickle.loads(frame_data)
+                 self.saveVideo(frame)
+             print("upload ended")
+         except:
+             traceback.print_exc()
+             print("upload ended")
 
 
 class ClientVideo: # only should have instances in EndUser
     def __init__(self):
         pass
+        # todo audio and video stream socket initialization
 
     def getVideo(self, path):
         pass
@@ -127,7 +173,56 @@ class ClientVideo: # only should have instances in EndUser
             cv2.destroyAllWindows()
 
     def receiveAudio(self):
-         pass
+
+        q = queue.Queue(maxsize=2000)
+
+        BUFF_SIZE = 65536
+        p = pyaudio.PyAudio()
+        CHUNK = 4 * 1024
+        stream = p.open(format=p.get_format_from_width(2),
+                        channels=2,
+                        rate=44100,
+                        output=True,
+                        frames_per_buffer=CHUNK)
+
+        while True:
+            try:
+                frame = self.audio_stream_socket.recv(4 * 1024)
+                stream.write(frame)
+            except Exception as e:
+                break
 
     def receiveVideo(self):
-         pass
+        print("receiving video...")
+
+        data = b""
+        payload_size = struct.calcsize("Q")
+
+        print("To quit streaming, you can click 'q' key...")
+
+        try:
+            while True:
+                while len(data) < payload_size:
+                    packet = self.video_stream_socket.recv(4 * 1024)  # 4K
+                    if not packet: break
+                    data += packet
+                packed_msg_size = data[:payload_size]
+                data = data[payload_size:]
+                msg_size = struct.unpack("Q", packed_msg_size)[0]
+
+                while len(data) < msg_size:
+                    data += self.video_stream_socket.recv(4 * 1024)
+                frame_data = data[:msg_size]
+                data = data[msg_size:]
+                frame = pickle.loads(frame_data)
+                cv2.imshow("RECEIVING VIDEO", frame)
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            print("stream ended")
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
+        except:
+            traceback.print_exc()
+            print("stream ended")
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
