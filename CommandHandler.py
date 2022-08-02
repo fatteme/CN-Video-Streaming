@@ -1,8 +1,12 @@
 import cmd
 from io import StringIO
+
+from services.UserService import UserService
+
 class CommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     prompt = '(youtube) '
+    userService = UserService()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -36,10 +40,10 @@ class CommandHandler(cmd.Cmd):
         if len(args) < 3:
             return CommandHandler.INVALID_ARGS
         if args[0] == 'user':
-            pass
+            CommandHandler.userService.create_end_user(args[1], args[2])
             return f'signup successfull. Admin permission is needed.'
         elif args[0] == 'admin':
-            pass
+            CommandHandler.userService.create_end_user(args[1], args[2])
             return f'signup successfull. Super admin permission is needed.'
         else:
             return CommandHandler.INVALID_ARGS

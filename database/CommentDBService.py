@@ -2,7 +2,7 @@ from mysql import connector
 from models.video.Video import Video
 from models.video.Comment import Comment
 
-class CommentService:
+class CommentDBService:
     def __init__(self, config):
         self.connector = connector.connect(
             host=config["host"],

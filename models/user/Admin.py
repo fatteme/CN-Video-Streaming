@@ -1,6 +1,5 @@
 class Admin:
     def __init__(self, username, password):
-        Admin.all_admins.append(self)
         self.username = username
         self.password = password
 

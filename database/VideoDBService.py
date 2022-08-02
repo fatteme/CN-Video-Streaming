@@ -1,7 +1,7 @@
 from mysql import connector
 from models.video.Video import Video
 
-class VideoService:
+class VideoDBService:
     def __init__(self, config):
         self.connector = connector.connect(
             host=config["host"],
