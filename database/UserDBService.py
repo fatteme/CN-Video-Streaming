@@ -19,6 +19,7 @@ class UserDBService:
         query = f"INSERT INTO {self.table} (username, password, strikes, is_admin, is_approved) Values (%s, %s, %s, %s, %s)"
         if isinstance(user, Admin):
             values = (user.username, encrypt(user.password), 0, 1, user.is_approved)
+            print("debug:", values)
         elif isinstance(user, EndUser):
             values = (user.username, encrypt(user.password), user.strikes, 0, user.is_approved)
 
@@ -53,3 +54,18 @@ class UserDBService:
             return Admin(result[0], result[1], result[4])
         else:
             return EndUser(*result)
+
+    def get_unapproved_users(self, is_admin = 0):
+        query = f"SELECT * from {self.table} WHERE is_admin=%s AND is_approved=0"
+        values = (is_admin,)
+        cursor = self.connector.cursor()
+        cursor.execute(query, values)
+        results = cursor.fetchall()
+        for result in results:
+            if is_admin:
+                yield Admin(result[0], result[1], result[4])
+            else:
+                yield EndUser(*result)
+
+    
+

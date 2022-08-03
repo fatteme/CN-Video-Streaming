@@ -1,6 +1,6 @@
 import socket
 
-from constants import HOST, PORT, EXIT_MESSAGE
+from Constants import HOST, PORT, EXIT_MESSAGE
 
 ClientSocket = socket.socket()
 

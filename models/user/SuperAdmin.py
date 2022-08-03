@@ -15,8 +15,3 @@ class SuperAdmin:
             self.password = "supreme_manager#2022"
 
 #admin addmission, other proxy related duties
-
-########################## test
-sa = SuperAdmin.getInstance()
-print(sa.username)
-print(sa.password)

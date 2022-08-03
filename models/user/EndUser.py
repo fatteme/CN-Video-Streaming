@@ -1,10 +1,10 @@
 class EndUser:
-    def __init__(self, username, password, is_admin=False):
+    def __init__(self, username, password, strikes = 0, is_admin = False, is_approved = False):
         self.username = username 
         self.password = password
-        self.strikes = 0
+        self.strikes = strikes
         self.is_admin = is_admin
-        self.is_approved = 0
+        self.is_approved = is_approved
 
 
 # capabilities: signup, login, logout, upload, stream, like, dislike, comment
