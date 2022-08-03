@@ -72,21 +72,21 @@ class ServerVideo:
     def saveVideo(self, video, frame):
         video.write(frame)
 
-    def saveAudio(self, frame):
-        pass
+    def saveAudio(self, wf2, frame):
+        wf2.writeframes(frame)
 
     def receiveAudio(self):
+        audio_path = "sth"  # todo add legit audio path
+        wf2 = wave.open(audio_path.replace("vid.wav", "vid2.wav"), 'w')
 
-        q = queue.Queue(maxsize=2000)
-
-        BUFF_SIZE = 65536
-        p = pyaudio.PyAudio()
-        CHUNK = 4 * 1024
+        wf2.setnchannels(1)  # todo wf.getnchannels()
+        wf2.setsampwidth(2)  # todo wf.getsampwidth()
+        wf2.setframerate(20)  # todo wf.getframerate()
 
         while True:
             try:
                 frame = self.audio_stream_socket.recv(4 * 1024)
-                self.saveAudio(frame)
+                self.saveAudio(wf2, frame)
             except Exception as e:
                 break
 
@@ -116,7 +116,7 @@ class ServerVideo:
 
                 if first_time:
                     height, width, layers = frame.shape
-                    video = cv2.VideoWriter('video.avi', fourcc, 20, (width, height))  # todo fix fps
+                    video = cv2.VideoWriter('video.avi', fourcc, 20, (width, height))  # todo fix fps, address
                     first_time = False
                 self.saveVideo(video, frame)
             print("upload ended")
