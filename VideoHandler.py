@@ -42,8 +42,11 @@ class ServerVideo:
 
         while True:
             data = wf.readframes(CHUNK)
+            if data == b'':
+                break
             # client.sendall(data)
             time.sleep(0.8 * CHUNK / sample_rate)
+        wf.close()
 
     def sendVideo(self, client, vid_name):
         print("Sending Video ...")
@@ -88,6 +91,7 @@ class ServerVideo:
                 frame = self.audio_stream_socket.recv(4 * 1024)
                 self.saveAudio(wf2, frame)
             except Exception as e:
+                wf2.close()
                 break
 
     def receiveVideo(self):
@@ -150,8 +154,11 @@ class ClientVideo:  # only should have instances in EndUser
 
         while True:
             data = wf.readframes(CHUNK)
+            if data == b'':
+                break
             # client.sendall(data)
             time.sleep(0.8 * CHUNK / sample_rate)
+        wf.close()
 
     def sendVideo(self, client, path):
         print("Uploading Video ...")
@@ -196,6 +203,7 @@ class ClientVideo:  # only should have instances in EndUser
                 frame = self.audio_stream_socket.recv(4 * 1024)
                 stream.write(frame)
             except Exception as e:
+                p.terminate()
                 break
 
     def receiveVideo(self):
