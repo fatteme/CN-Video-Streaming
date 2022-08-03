@@ -8,12 +8,8 @@ import pyaudio
 import queue
 import struct
 import traceback
+import moviepy.editor as mp
 import socket
-
-
-def send_video():
-    pass
-
 
 class ServerVideo:
     _instance = None
@@ -46,13 +42,13 @@ class ServerVideo:
 
         while True:
             data = wf.readframes(CHUNK)
-            client.sendall(data)
+            # client.sendall(data)
             time.sleep(0.8 * CHUNK / sample_rate)
 
     def sendVideo(self, client, vid_name):
         print("Sending Video ...")
 
-        video_path = self.getVideo(vid_name)
+        video_path = self.get_video(vid_name)
         try:
             while True:
                 if client:
@@ -134,14 +130,17 @@ class ClientVideo:  # only should have instances in EndUser
         pass
         # todo audio and video stream socket initialization
 
-    def getVideo(self, path):
+    def get_video(self, path):
         pass
 
     def sendAudio(self, path):
-        print("Uoloading Audio ...")
-        video = self.getVideo(path)
-        audio_name = video.name.replace(".mp4", ".wav")
-        audio_path = os.path.join(os.getcwd(), 'audios', audio_name)
+        print("Uploading Audio ...")
+
+        video_path = self.get_video(path)
+        audio_path = video_path.replace(".mp4", ".wav")
+
+        my_clip = mp.VideoFileClip(video_path)
+        my_clip.audio.write_audiofile(audio_path)
 
         CHUNK = 4 * 1024
         wf = wave.open(audio_path)
@@ -157,7 +156,7 @@ class ClientVideo:  # only should have instances in EndUser
     def sendVideo(self, client, path):
         print("Uploading Video ...")
 
-        video = self.getVideo(path)
+        video = self.get_video(path)
         video_path = os.path.join(os.getcwd(), 'videos', video.name)
         try:
             while True:
