@@ -2,15 +2,17 @@ from uuid import uuid4
 
 
 class Video:
-    def __init__(self, title, owner, adrs):
+    def __init__(self, title, owner, adrs, name_identifier=None, availabe=True, likes=0, dislikes=0, comments=[]):
         self.title = title
-        self.name_identifier = str(uuid4())
+        self.name_identifier = name_identifier
+        if not self.name_identifier:
+            self.name_identifier = str(uuid4())
         self.owner = owner
         self.adrs = adrs
-        self.available = True
-        self.likes = 0
-        self.dislikes = 0
-        self.comments = []
+        self.available = availabe
+        self.likes = likes
+        self.dislikes = dislikes
+        self.comments = comments
 
     def export(self):
         return {
