@@ -1,5 +1,5 @@
 HOST = '127.0.0.1'
-PORT = 1233
+PORT = 1234
 EXIT_MESSAGE = 'q'
 
 DB_CONFIG = {

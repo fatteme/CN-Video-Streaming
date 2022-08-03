@@ -21,14 +21,13 @@ class CommandHandler(cmd.Cmd):
         if len(args) < 3:
             return CommandHandler.INVALID_ARGS
         if args[0] == 'user':
-            pass
+            return CommandHandler.userService.get_end_user(username=args[1], password=args[2])
         elif args[0] == 'admin':
-            pass
+            return CommandHandler.userService.get_admin(username=args[1], password=args[2])
         elif args[0] == 'superadmin':
-            pass
+            return CommandHandler.userService.get_super_admin(username=args[1], password=args[2])
         else:
             return CommandHandler.INVALID_ARGS
-        return f'login successfull.'
 
     def do_logout(self, arg):
         'logout'
@@ -43,14 +42,14 @@ class CommandHandler(cmd.Cmd):
             CommandHandler.userService.create_end_user(args[1], args[2])
             return f'signup successfull. Admin permission is needed.'
         elif args[0] == 'admin':
-            CommandHandler.userService.create_end_user(args[1], args[2])
+            CommandHandler.userService.create_admin(args[1], args[2])
             return f'signup successfull. Super admin permission is needed.'
         else:
             return CommandHandler.INVALID_ARGS
     
     def do_permissions(self, arg):
         'permissions'
-        return f'here is the signup permission list:\n'
+        return f'here is the signup permission list:\n {CommandHandler.userService.get_unapproved_users()}'
 
     def do_permission(self, arg):
         'permission [username]'

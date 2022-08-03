@@ -2,7 +2,7 @@ import socket
 from _thread import *
 
 from CommandHandler import CommandHandler
-from constants import EXIT_MESSAGE, HOST, PORT
+from Constants import EXIT_MESSAGE, HOST, PORT
 
 ThreadCount = 0
 cmdHandler = CommandHandler()
