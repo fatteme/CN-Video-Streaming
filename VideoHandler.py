@@ -1,6 +1,8 @@
-from video.Video import Video
+from models.video.Video import Video
 import cv2
 import wave
+import time
+import pickle
 import os
 import pyaudio
 import queue
@@ -9,33 +11,32 @@ import traceback
 import socket
 
 
-def sendVideo():
+def send_video():
     pass
 
+
 class ServerVideo:
-     _instance = None
-     @staticmethod
-     def getInstance():
-         if ServerVideo._instance == None:
-             ServerVideo()
-         return ServerVideo._instance
-     
-     def __init__(self):
-         if ServerVideo._instance != None:
-             raise Exception("You can not have more than one super admin!")
-         else:
-             pass
+    _instance = None
 
-     def getVideo(self, vid_name): # get video from database
+    @staticmethod
+    def getInstance():
+        if ServerVideo._instance is None:
+            ServerVideo()
+        return ServerVideo._instance
+
+    def __init__(self):
+        if ServerVideo._instance is not None:
+            raise Exception("You can not have more than one super admin!")
+        else:
+            pass
+
+    def get_video(self, vid_name):  # get video from database
         return None
-     
-     def sendAudio(self, vid_name):
-        print("Sending Audio ...")
-        video = self.getVideo(vid_name)
-        audio_name = video.name.replace(".mp4", ".wav")
-        audio_path = os.path.join(os.getcwd(), 'audios', audio_name)
 
-        BUFF_SIZE = 65536
+    def send_audio(self, vid_name):
+        print("Sending Audio ...")
+        video_path = self.get_video(vid_name)
+        audio_path = video_path.name.replace(".mp4", ".wav")
 
         CHUNK = 4 * 1024
         wf = wave.open(audio_path)
@@ -46,20 +47,20 @@ class ServerVideo:
         while True:
             data = wf.readframes(CHUNK)
             client.sendall(data)
-            time.sleep(0.8 * CHUNK / sample_rate)  
-     
-     def sendVideo(self, client, vid_name):
+            time.sleep(0.8 * CHUNK / sample_rate)
+
+    def sendVideo(self, client, vid_name):
         print("Sending Video ...")
 
-        video = self.getVideo(vid_name) 
-        video_path = os.path.join(os.getcwd(), 'videos', video.name)
+        video_path = self.getVideo(vid_name)
         try:
             while True:
                 if client:
                     vid = cv2.VideoCapture(video_path)
 
-                    while vid.isOpened():
-                        img, frame = vid.read()
+                    success = True
+                    while success:
+                        success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
                         client.sendall(message)
@@ -71,14 +72,14 @@ class ServerVideo:
         if vid:
             vid.release()
             cv2.destroyAllWindows()
-       
-     def saveVideo(self, frame):
-         pass
 
-     def saveAudio(self, frame):
-         pass
-            
-     def receiveAudio(self):
+    def saveVideo(self, video, frame):
+        video.write(frame)
+
+    def saveAudio(self, frame):
+        pass
+
+    def receiveAudio(self):
 
         q = queue.Queue(maxsize=2000)
 
@@ -93,35 +94,42 @@ class ServerVideo:
             except Exception as e:
                 break
 
-     def receiveVideo(self):
-         print("receiving video...")
+    def receiveVideo(self):
+        print("receiving video...")
 
-         data = b""
-         payload_size = struct.calcsize("Q")
+        data = b""
+        payload_size = struct.calcsize("Q")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        first_time = True
 
-         try:
-             while True:
-                 while len(data) < payload_size:
-                     packet = self.video_stream_socket.recv(4 * 1024)  # 4K
-                     if not packet: break
-                     data += packet
-                 packed_msg_size = data[:payload_size]
-                 data = data[payload_size:]
-                 msg_size = struct.unpack("Q", packed_msg_size)[0]
+        try:
+            while True:
+                while len(data) < payload_size:
+                    packet = self.video_stream_socket.recv(4 * 1024)  # 4K
+                    if not packet: break
+                    data += packet
+                packed_msg_size = data[:payload_size]
+                data = data[payload_size:]
+                msg_size = struct.unpack("Q", packed_msg_size)[0]
 
-                 while len(data) < msg_size:
-                     data += self.video_stream_socket.recv(4 * 1024)
-                 frame_data = data[:msg_size]
-                 data = data[msg_size:]
-                 frame = pickle.loads(frame_data)
-                 self.saveVideo(frame)
-             print("upload ended")
-         except:
-             traceback.print_exc()
-             print("upload ended")
+                while len(data) < msg_size:
+                    data += self.video_stream_socket.recv(4 * 1024)
+                frame_data = data[:msg_size]
+                data = data[msg_size:]
+                frame = pickle.loads(frame_data)
+
+                if first_time:
+                    height, width, layers = frame.shape
+                    video = cv2.VideoWriter('video.avi', fourcc, 20, (width, height))  # todo fix fps
+                    first_time = False
+                self.saveVideo(video, frame)
+            print("upload ended")
+        except:
+            traceback.print_exc()
+            print("upload ended")
 
 
-class ClientVideo: # only should have instances in EndUser
+class ClientVideo:  # only should have instances in EndUser
     def __init__(self):
         pass
         # todo audio and video stream socket initialization
@@ -135,8 +143,6 @@ class ClientVideo: # only should have instances in EndUser
         audio_name = video.name.replace(".mp4", ".wav")
         audio_path = os.path.join(os.getcwd(), 'audios', audio_name)
 
-        BUFF_SIZE = 65536
-
         CHUNK = 4 * 1024
         wf = wave.open(audio_path)
 
@@ -145,21 +151,22 @@ class ClientVideo: # only should have instances in EndUser
 
         while True:
             data = wf.readframes(CHUNK)
-            client.sendall(data)
-            time.sleep(0.8 * CHUNK / sample_rate)  
-     
+            # client.sendall(data)
+            time.sleep(0.8 * CHUNK / sample_rate)
+
     def sendVideo(self, client, path):
         print("Uploading Video ...")
 
-        video = self.getVideo(path) 
+        video = self.getVideo(path)
         video_path = os.path.join(os.getcwd(), 'videos', video.name)
         try:
             while True:
                 if client:
                     vid = cv2.VideoCapture(video_path)
 
-                    while vid.isOpened():
-                        img, frame = vid.read()
+                    success = True
+                    while success:
+                        success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
                         client.sendall(message)
