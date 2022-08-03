@@ -42,4 +42,3 @@ class VideoDBService:
         cursor = self.connector.cursor()
         cursor.execute(query, values)
         result = cursor.fetchone()
-        return Video(title=title, owner=result[2], adrs=result[3], name_identifier=result[1], availabe=result[4], likes=result[5], dislikes=result[6])
