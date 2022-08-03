@@ -31,6 +31,7 @@ class CommandHandler(cmd.Cmd):
 
     def do_logout(self, arg):
         'logout'
+        self.userService.logout()
         return f'logout successfull.'
     
     def do_signup(self, arg):
@@ -51,12 +52,12 @@ class CommandHandler(cmd.Cmd):
         'permissions'
         return f'here is the signup permission list:\n {CommandHandler.userService.get_unapproved_users()}'
 
-    def do_permission(self, arg):
-        'permission [username]'
+    def do_approve(self, arg):
+        'approve [username]'
         args = parse(arg)
         if len(args) < 1:
             return CommandHandler.INVALID_ARGS
-        return f'permission granted.'
+        return CommandHandler.userService.approve(args[0])
     
     def do_exit(self, arg):
         'type q to exit'

@@ -20,6 +20,9 @@ class UserService:
         user = Admin(username=username, password=password)
         self.userDBService.create_user(user=user)
     
+    def logout(self):
+        self.user = None
+
     def get_end_user(self, username, password):
         user = self.userDBService.get_user(username=username)
         if user.is_admin:
@@ -61,7 +64,6 @@ class UserService:
         elif isinstance(self.user, SuperAdmin):
             return self.get_unapproved_admins()
 
-
     def get_unapproved_end_users(self):
         users = self.userDBService.get_unapproved_users()
         return '\n'.join(list(map(lambda a : a.username, users)))
@@ -69,3 +71,20 @@ class UserService:
     def get_unapproved_admins(self):
         users = self.userDBService.get_unapproved_users(is_admin=1)
         return '\n'.join(list(map(lambda a : a.username, users)))
+
+    def approve(self, username):
+        user = self.userDBService.get_user(username=username)
+        if isinstance(self.user, EndUser):
+            return 'End users do not have permission for this.'
+        elif isinstance(self.user, Admin):
+            if not self.user.is_approved:
+                return 'Admin needs to be approved'
+            else:
+                if isinstance(user, Admin):
+                    return 'Admin cannot grant permission for admin users.'
+                user.is_approved = 1
+                self.userDBService.update_user(user=user)
+        elif isinstance(self.user, SuperAdmin):
+            user.is_approved = 1
+            self.userDBService.update_user(user=user)
+        return f'permission granted to {username}'
