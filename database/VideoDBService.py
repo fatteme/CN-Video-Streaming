@@ -1,3 +1,4 @@
+from unicodedata import name
 from mysql import connector
 from models.video.Video import Video
 
@@ -33,3 +34,12 @@ class VideoDBService:
         self.connector.commit()
 
         print(cursor.rowcount, "record(s) affected")
+
+    def get_video(self, title):
+        query = f"SELECT * from {self.table} WHERE title = %s"
+        values = (title,)
+
+        cursor = self.connector.cursor()
+        cursor.execute(query, values)
+        result = cursor.fetchone()
+        return Video(title=title, owner=result[2], adrs=result[3], name_identifier=result[1], availabe=result[4], likes=result[5], dislikes=result[6])
