@@ -1,10 +1,10 @@
 from numpy import isin
-from Constants import DB_CONFIG
-from database.UserDBService import UserDBService
-from models.user.Admin import Admin
-from models.user.EndUser import EndUser
-from models.user.SuperAdmin import SuperAdmin
-from Utils import encrypt
+from constraints import DB_CONFIG
+from database.user_db_service import UserDBService
+from models.user.admin import Admin
+from models.user.end_user import EndUser
+from models.user.super_user import SuperAdmin
+from utils import encrypt
 
 
 class UserService:
@@ -55,10 +55,10 @@ class UserService:
         if not self.user:
             return 'You need to login first, try help login for more info.'
         if isinstance(self.user, EndUser):
-            return 'End users do not hhave permission for this.'
+            return 'End users do not have permission for this.'
         elif isinstance(self.user, Admin):
             if not self.user.is_approved:
-                return 'Admin needs to be approved'
+                return 'Admins need to be approved.'
             else:
                 return self.get_unapproved_end_users()
         elif isinstance(self.user, SuperAdmin):
@@ -78,7 +78,7 @@ class UserService:
             return 'End users do not have permission for this.'
         elif isinstance(self.user, Admin):
             if not self.user.is_approved:
-                return 'Admin needs to be approved'
+                return 'Admins need to be approved.'
             else:
                 if isinstance(user, Admin):
                     return 'Admin cannot grant permission for admin users.'
@@ -87,4 +87,4 @@ class UserService:
         elif isinstance(self.user, SuperAdmin):
             user.is_approved = 1
             self.userDBService.update_user(user=user)
-        return f'permission granted to {username}'
+        return f'permission granted to {username}.'

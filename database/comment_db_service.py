@@ -1,6 +1,6 @@
 from mysql import connector
-from models.video.Video import Video
-from models.video.Comment import Comment
+from models.video.video import Video
+from models.video.comment import Comment
 
 class CommentDBService:
     def __init__(self, config):

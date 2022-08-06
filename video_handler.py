@@ -1,4 +1,4 @@
-from models.video.Video import Video
+from models.video.video import Video
 import cv2
 import wave
 import time

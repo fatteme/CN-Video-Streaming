@@ -1,8 +1,8 @@
 from matplotlib import use
-from models.user.Admin import Admin
-from models.user.EndUser import EndUser
+from models.user.admin import Admin
+from models.user.end_user import EndUser
 from mysql import connector
-from Utils import encrypt
+from utils import encrypt
 
 
 class UserDBService:

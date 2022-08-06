@@ -1,6 +1,6 @@
 from unicodedata import name
 from mysql import connector
-from models.video.Video import Video
+from models.video.video import Video
 
 class VideoDBService:
     def __init__(self, config):

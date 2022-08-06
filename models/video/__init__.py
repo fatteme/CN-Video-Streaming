@@ -1,1 +1,1 @@
-import video.Video
+import models.video.video
