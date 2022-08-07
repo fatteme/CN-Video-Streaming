@@ -5,23 +5,23 @@ import time
 import pickle
 import os
 import pyaudio
-import queue
 import struct
 import traceback
 import moviepy.editor as mp
 import socket
 
-class ServerVideo:
+
+class server_video:
     _instance = None
 
     @staticmethod
     def getInstance():
-        if ServerVideo._instance is None:
-            ServerVideo()
-        return ServerVideo._instance
+        if server_video._instance is None:
+            server_video()
+        return server_video._instance
 
     def __init__(self):
-        if ServerVideo._instance is not None:
+        if server_video._instance is not None:
             raise Exception("You can not have more than one super admin!")
         else:
             pass
@@ -48,7 +48,7 @@ class ServerVideo:
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def sendVideo(self, client, vid_name):
+    def send_video(self, client, vid_name):
         print("Sending Video ...")
 
         video_path = self.get_video(vid_name)
@@ -72,13 +72,13 @@ class ServerVideo:
             vid.release()
             cv2.destroyAllWindows()
 
-    def saveVideo(self, video, frame):
+    def save_video(self, video, frame):
         video.write(frame)
 
-    def saveAudio(self, wf2, frame):
+    def save_audio(self, wf2, frame):
         wf2.writeframes(frame)
 
-    def receiveAudio(self):
+    def receive_audio(self):
         audio_path = "sth"  # todo add legit audio path
         wf2 = wave.open(audio_path.replace("vid.wav", "vid2.wav"), 'w')
 
@@ -89,12 +89,12 @@ class ServerVideo:
         while True:
             try:
                 frame = self.audio_stream_socket.recv(4 * 1024)
-                self.saveAudio(wf2, frame)
+                self.save_audio(wf2, frame)
             except Exception as e:
                 wf2.close()
                 break
 
-    def receiveVideo(self):
+    def receive_video(self):
         print("receiving video...")
 
         data = b""
@@ -122,14 +122,14 @@ class ServerVideo:
                     height, width, layers = frame.shape
                     video = cv2.VideoWriter('video.avi', fourcc, 20, (width, height))  # todo fix fps, address
                     first_time = False
-                self.saveVideo(video, frame)
+                self.save_video(video, frame)
             print("upload ended")
         except:
             traceback.print_exc()
             print("upload ended")
 
 
-class ClientVideo:  # only should have instances in EndUser
+class client_video:  # only should have instances in EndUser
     def __init__(self):
         pass
         # todo audio and video stream socket initialization
@@ -137,7 +137,7 @@ class ClientVideo:  # only should have instances in EndUser
     def get_video(self, path):
         pass
 
-    def sendAudio(self, path):
+    def send_audio(self, path):
         print("Uploading Audio ...")
 
         video_path = self.get_video(path)
@@ -160,7 +160,7 @@ class ClientVideo:  # only should have instances in EndUser
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def sendVideo(self, client, path):
+    def send_video(self, client, path):
         print("Uploading Video ...")
 
         video = self.get_video(path)
@@ -185,11 +185,7 @@ class ClientVideo:  # only should have instances in EndUser
             vid.release()
             cv2.destroyAllWindows()
 
-    def receiveAudio(self):
-
-        q = queue.Queue(maxsize=2000)
-
-        BUFF_SIZE = 65536
+    def receive_audio(self):
         p = pyaudio.PyAudio()
         CHUNK = 4 * 1024
         stream = p.open(format=p.get_format_from_width(2),
@@ -206,7 +202,7 @@ class ClientVideo:  # only should have instances in EndUser
                 p.terminate()
                 break
 
-    def receiveVideo(self):
+    def receive_video(self):
         print("receiving video...")
 
         data = b""
