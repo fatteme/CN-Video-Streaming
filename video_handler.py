@@ -8,31 +8,26 @@ import pyaudio
 import struct
 import traceback
 import moviepy.editor as mp
-import socket
 
 
-class server_video:
-    _instance = None
+class ServerVideo:
 
-    @staticmethod
-    def getInstance():
-        if server_video._instance is None:
-            server_video()
-        return server_video._instance
+    def __init__(self, client, video_connection, audio_connection):
+        self.client = client
+        self.video_stream_socket = video_connection
+        self.audio_stream_socket = audio_connection
 
-    def __init__(self):
-        if server_video._instance is not None:
-            raise Exception("You can not have more than one super admin!")
-        else:
-            pass
 
-    def get_video(self, vid_name):  # get video from database
-        return None
+    def initialize_vid(self, title):
+        Video(title, self.client, os.path.join(os.getcwd(), 'videos', title))
 
-    def send_audio(self, vid_name):
+    def get_video(self, vid_name):  # todo get title from database currently can not have similar names
+        return os.path.join(os.getcwd(), 'videos', vid_name)
+
+    def send_audio(self, vid_name):  # assumes video has an audio file with the same address
         print("Sending Audio ...")
         video_path = self.get_video(vid_name)
-        audio_path = video_path.name.replace(".mp4", ".wav")
+        audio_path = video_path.replace(".mp4", ".wav")
 
         CHUNK = 4 * 1024
         wf = wave.open(audio_path)
@@ -44,7 +39,7 @@ class server_video:
             data = wf.readframes(CHUNK)
             if data == b'':
                 break
-            # client.sendall(data)
+            self.audio_stream_socket.send(data)
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
@@ -54,7 +49,7 @@ class server_video:
         video_path = self.get_video(vid_name)
         try:
             while True:
-                if client:
+                if self.video_stream_socket:
                     vid = cv2.VideoCapture(video_path)
 
                     success = True
@@ -62,7 +57,7 @@ class server_video:
                         success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
-                        client.sendall(message)
+                        self.video_stream_socket.send(message)
                 break
         except:
             print("exception occured! (video)")
@@ -82,9 +77,9 @@ class server_video:
         audio_path = "sth"  # todo add legit audio path
         wf2 = wave.open(audio_path.replace("vid.wav", "vid2.wav"), 'w')
 
-        wf2.setnchannels(1)  # todo wf.getnchannels()
+        wf2.setnchannels(2)  # todo wf.getnchannels()
         wf2.setsampwidth(2)  # todo wf.getsampwidth()
-        wf2.setframerate(20)  # todo wf.getframerate()
+        wf2.setframerate(44100)  # todo wf.getframerate()
 
         while True:
             try:
@@ -120,7 +115,7 @@ class server_video:
 
                 if first_time:
                     height, width, layers = frame.shape
-                    video = cv2.VideoWriter('video.avi', fourcc, 20, (width, height))  # todo fix fps, address
+                    video = cv2.VideoWriter('video.avi', fourcc, 24, (width, height))  # todo fix fps, address
                     first_time = False
                 self.save_video(video, frame)
             print("upload ended")
@@ -129,15 +124,18 @@ class server_video:
             print("upload ended")
 
 
-class client_video:  # only should have instances in EndUser
-    def __init__(self):
-        pass
-        # todo audio and video stream socket initialization
+class ClientVideo:  # only should have instances in EndUser
+    def __init__(self, client, title, audio_connection, video_connection):
+        self.client = client
+        self.title = title
+        self.path = os.getcwd()
+        self.audio_stream_socket = audio_connection
+        self.video_stream_socket = video_connection
 
     def get_video(self, path):
-        pass
+        return os.path.join(self.path, path)
 
-    def send_audio(self, path):
+    def send_audio(self, path):  # specify path from current folder
         print("Uploading Audio ...")
 
         video_path = self.get_video(path)
@@ -156,18 +154,17 @@ class client_video:  # only should have instances in EndUser
             data = wf.readframes(CHUNK)
             if data == b'':
                 break
-            # client.sendall(data)
+            self.audio_stream_socket.send(data)
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def send_video(self, client, path):
+    def send_video(self, path):
         print("Uploading Video ...")
 
-        video = self.get_video(path)
-        video_path = os.path.join(os.getcwd(), 'videos', video.name)
+        video_path = self.get_video(path)
         try:
             while True:
-                if client:
+                if self.video_stream_socket:
                     vid = cv2.VideoCapture(video_path)
 
                     success = True
@@ -175,7 +172,7 @@ class client_video:  # only should have instances in EndUser
                         success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
-                        client.sendall(message)
+                        self.video_stream_socket.send(message)
                 break
         except:
             print("exception occured! (video)")
