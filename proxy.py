@@ -2,7 +2,7 @@ import socket
 from _thread import *
 
 from command_handler_proxy_server import ClientCommandHandler
-from constraints import EXIT_MESSAGE, HOST, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
+from consts import EXIT_MESSAGE, HOST, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 
 def client_handler(client_connection, server_socket):
     client_connection.send(str.encode(f'Connected to the proxy server.'))

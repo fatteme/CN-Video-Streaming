@@ -1,5 +1,5 @@
 from numpy import isin
-from constraints import DB_CONFIG
+from consts import DB_CONFIG
 from database.user_db_service import UserDBService
 from models.user.admin import Admin
 from models.user.end_user import EndUser
@@ -88,3 +88,9 @@ class UserService:
             user.is_approved = 1
             self.userDBService.update_user(user=user)
         return f'permission granted to {username}.'
+
+    def is_approved_admin(self, username):
+        user = self.userDBService.get_user(username=username)
+        if not user:
+            return False, False
+        return True, user.is_approved

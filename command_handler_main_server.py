@@ -1,13 +1,16 @@
 import cmd
 from io import StringIO
+from unittest import result
+from services.ticket_service import TicketService
 
 from services.user_service import UserService
-from constraints import OUT_OF_NETWORK_ERROR
+from consts import OUT_OF_NETWORK_ERROR, SUPERUSER
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     prompt = '(youtube) '
-    userService = UserService()
+    user_service = UserService()
+    ticket_service = TicketService()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -22,19 +25,17 @@ class ClientCommandHandler(cmd.Cmd):
         if len(args) < 3:
             return ClientCommandHandler.INVALID_ARGS
         if args[0] == 'user':
-            return ClientCommandHandler.userService.get_end_user(username=args[1], password=args[2])
+            return ClientCommandHandler.user_service.get_end_user(username=args[1], password=args[2])
         elif args[0] == 'admin':
-            # return CommandHandler.userService.get_admin(username=args[1], password=args[2])
             return OUT_OF_NETWORK_ERROR
         elif args[0] == 'superadmin':
-            # return CommandHandler.userService.get_super_admin(username=args[1], password=args[2])
             return OUT_OF_NETWORK_ERROR
         else:
             return ClientCommandHandler.INVALID_ARGS
 
     def do_logout(self, arg):
         'logout'
-        self.userService.logout()
+        self.user_service.logout()
         return f'logout successfull.'
     
     def do_signup(self, arg):
@@ -43,14 +44,33 @@ class ClientCommandHandler(cmd.Cmd):
         if len(args) < 3:
             return ClientCommandHandler.INVALID_ARGS
         if args[0] == 'user':
-            ClientCommandHandler.userService.create_end_user(args[1], args[2])
+            ClientCommandHandler.user_service.create_end_user(args[1], args[2])
             return f'signup successfull. Admin permission is needed.'
         elif args[0] == 'admin':
-            # CommandHandler.userService.create_admin(args[1], args[2])
-            # return f'signup successfull. Super admin permission is needed.'
             return OUT_OF_NETWORK_ERROR
         else:
             return ClientCommandHandler.INVALID_ARGS
+
+    def do_ticket(self, arg):
+        'ticket [text]'
+        if not self.user_service.user:
+            return "You are not logged in!"
+        result = self.ticket_service.create_ticket(arg[0], self.user_service.user.username)
+        return result
+
+    def do_set_ticket_state(self, arg):
+        'set_ticket_state [ticketid] [state]'
+        if not self.user_service.user:
+            return "You are not logged in!"
+        result = self.ticket_service.set_ticket_state(arg[0], arg[1], self.user_service.user.username)
+        return result
+
+    def do_my_tickets(self, arg):
+        'my_tickets'
+        if not self.user_service.user:
+            return "You are not logged in!"
+        result = self.ticket_service.get_all_user_tickets(self.user_service.user.username)
+        return result
     
     def do_exit(self, arg):
         'type q to exit'
@@ -59,7 +79,8 @@ class ClientCommandHandler(cmd.Cmd):
 class ProxyCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     prompt = '(turtle) '
-    userService = UserService()
+    user_service = UserService()
+    ticket_service = TicketService()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -67,43 +88,58 @@ class ProxyCommandHandler(cmd.Cmd):
         super().__setattr__('stdout', help_output)
         super().do_help(arg)
         return help_output.getvalue()
-
-    # def do_login(self, arg):
-    #     'login [type=  admin | superadmin] [username] [password]'
-    #     args = parse(arg)
-    #     if len(args) < 3:
-    #         return self.INVALID_ARGS
-    #     elif args[0] == 'admin':
-    #         return self.userService.get_admin(username=args[1], password=args[2])
-    #     elif args[0] == 'superadmin':
-    #         return self.userService.get_super_admin(username=args[1], password=args[2])
-    #     else:
-    #         return self.INVALID_ARGS
-
-    # def do_logout(self, arg):
-    #     'logout'
-    #     self.userService.logout()
-    #     return f'logout successfull.'
-    
-    # def do_signup(self, arg):
-    #     'signup [username] [password]'
-    #     args = parse(arg)
-    #     if len(args) < 2:
-    #         return self.INVALID_ARGS
-    #     self.userService.create_admin(args[1], args[2])
-    #     return f'signup successfull. Super admin permission is needed.'
     
     def do_permissions(self, arg):
         'permissions'
-        return f'here is the signup permission list:\n {self.userService.get_unapproved_users()}'
+        return f'here is the signup permission list:\n {self.user_service.get_unapproved_users()}'
 
     def do_approve(self, arg):
         'approve [username]'
         args = parse(arg)
         if len(args) < 1:
             return self.INVALID_ARGS
-        return self.userService.approve(args[0])
-    
+        return self.user_service.approve(args[0])
+
+    def do_ticket(self, arg):
+        'ticket [text] [username]'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+        result = self.ticket_service.create_ticket(arg[0], arg[1], SUPERUSER)
+        return result
+
+    def do_reply_ticket(self, arg):
+        'reply_ticket [ticketid] [text] [username]'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+        result = self.ticket_service.reply_to_ticket(arg[0], " ".join(arg[1:-1], arg[-1]))
+        return result
+
+    def do_set_ticket_state(self, arg):
+        'set_ticket_state [ticketid] [state] [username]'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+        result = self.ticket_service.set_ticket_state(arg[0], arg[1])
+        return result
+
+    def do_open_tickets(self, arg):
+        'open_tickets'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+        result = self.ticket_service.get_all_open_tickets()
+        return result
+
     def do_exit(self, arg):
         'type q to exit'
         return ''

@@ -3,6 +3,8 @@ PORT = 2234
 PORT_P_MAIN_SERVER = 1235
 PORT_P_PROXY_SEREVR = 4236
 
+SUPERUSER = "supreme_manager#2022"
+
 EXIT_MESSAGE = 'q'
 
 DB_CONFIG = {
@@ -11,4 +13,4 @@ DB_CONFIG = {
     "database":"stream"
 }
 
-OUT_OF_NETWORK_ERROR = 'Out of network error! Please login to network first.'
+OUT_OF_NETWORK_ERROR = 'Access Denied! Please login to the network first.'

@@ -3,7 +3,7 @@ from _thread import *
 
 from command_handler_main_server import ClientCommandHandler
 from command_handler_main_server import ProxyCommandHandler
-from constraints import EXIT_MESSAGE, HOST, PORT, PORT_P_MAIN_SERVER
+from consts import EXIT_MESSAGE, HOST, PORT, PORT_P_MAIN_SERVER
 
 def client_handler(connection):
     client_cmd_handler = ClientCommandHandler()

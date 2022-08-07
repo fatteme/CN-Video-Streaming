@@ -1,6 +1,6 @@
 import socket
 
-from constraints import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR
+from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR
 
 client_socket = socket.socket()
 proxy_socket = socket.socket()

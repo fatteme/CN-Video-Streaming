@@ -2,11 +2,15 @@ import cmd
 from io import StringIO
 
 from services.user_service import UserService
+from consts import OUT_OF_NETWORK_ERROR
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     prompt = '(youtube) '
     user_service = UserService()
+
+    def has_logged_in(self):
+        return self.user_service.user != None
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -43,6 +47,30 @@ class ClientCommandHandler(cmd.Cmd):
     def do_exit(self, arg):
         'type q to exit'
         return '', False
+
+    def do_reply_ticket(self, arg):
+        'reply [ticketid] [text]'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_ticket(self, arg):
+        'ticket [text] [username]'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_set_ticket_state(self, arg):
+        'set_ticket_state [ticketid] [state] [username]'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_open_tickets(self, arg):
+        'open_tickets'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
         
 
 def parse(arg):
