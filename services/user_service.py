@@ -102,3 +102,13 @@ class UserService:
         if not user:
             return False, False
         return True, user.is_approved
+
+    def unstrike_user(self, username):
+        print('unstriking ', username)
+        user = self.userDBService.get_user(username=username)
+        if isinstance(user, EndUser):
+            user.strikes = 0
+            self.userDBService.update_user(user=user)
+            return 'user unstriked!'
+        else:
+            return 'This act cannot be done on a/an (super)admin' 

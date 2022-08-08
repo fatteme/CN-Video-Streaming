@@ -236,6 +236,14 @@ class ProxyCommandHandler(cmd.Cmd):
         self.set_user(args[-1])
         return self.video_service.remove_video(args[0])
 
+    def do_unstrike(self, arg):
+        'unstrike [username]'
+        # 'unstrike [username] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) != 2:
+            return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
+        return self.user_service.unstrike_user(args[0])
 
 def parse(arg):
     return arg.split()

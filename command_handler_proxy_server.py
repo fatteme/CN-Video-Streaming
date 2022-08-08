@@ -89,6 +89,10 @@ class ClientCommandHandler(cmd.Cmd):
     def do_remove(self, arg):
         'remove [video_title]'
         return self.forward_req()
+    
+    def do_unstrike(self, arg):
+        'unstrike [username]'
+        return self.forward_req()
 
 
 def parse(arg):

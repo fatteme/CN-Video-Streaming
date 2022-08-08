@@ -51,7 +51,7 @@ class UserDBService:
         result = cursor.fetchone()
 
 
-        is_admin = result[3] if result else False
+        is_admin = result[3]
         if is_admin:
             return Admin(result[0], result[1], result[4])
         else:
