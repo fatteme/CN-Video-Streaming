@@ -4,7 +4,7 @@ import enum
 
 class Ticket:
     def __init__(self, user, text):
-        self.id = uuid4()
+        self.id = str(uuid4())
         self.user = user
         self.assignee = None
         self.text = text

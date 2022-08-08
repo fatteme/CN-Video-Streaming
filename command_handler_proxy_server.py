@@ -66,33 +66,21 @@ class ClientCommandHandler(cmd.Cmd):
         'approve [username]'
         return self.forward_req()
 
-    def do_reply_ticket(self, arg):
-        'reply [ticketid] [text]'
+    def do_ticket(self, arg):
+        'ticket [username] [text]'
         return self.forward_req()
 
-    def do_ticket(self, arg):
-        'ticket [text] [username]'
+    def do_reply_ticket(self, arg):
+        'reply_ticket [ticketid] [text]'
         return self.forward_req()
 
     def do_set_ticket_state(self, arg):
-        'set_ticket_state [ticketid] [state] [username]'
+        'set_ticket_state [ticketid] [state]'
         return self.forward_req()
 
     def do_open_tickets(self, arg):
         'open_tickets'
         return self.forward_req()
-
-    def do_permissions(self, arg):
-        'permissions'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
-
-    def do_approve(self, arg):
-        'approve [username]'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
 
     def do_label(self, arg):
         'label [title] [text]'

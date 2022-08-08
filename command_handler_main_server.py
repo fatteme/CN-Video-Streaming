@@ -168,53 +168,50 @@ class ProxyCommandHandler(cmd.Cmd):
         return self.user_service.approve(args[0])
 
     def do_ticket(self, arg):
-        'ticket [text] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.create_ticket(arg[0], arg[1], SUPERUSER)
+        'ticket [text]'
+        # 'ticket [text] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 2:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        text = " ".join(args[1:-1])
+        # assignee is None, so its superuser
+        result = self.ticket_service.create_ticket(username=args[-1], text=text)
         return result
 
     def do_reply_ticket(self, arg):
-        'reply_ticket [ticketid] [text] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.reply_to_ticket(arg[0], " ".join(arg[1:-1], arg[-1]))
+        'reply_ticket [ticketid] [text]'
+        # 'reply_ticket [ticketid] [text] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 3:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        text = " ".join(args[1:-1])
+        result = self.ticket_service.reply_to_ticket(ticket_id=args[0], reply_text=text, username=args[-1])
         return result
 
     def do_set_ticket_state(self, arg):
-        'set_ticket_state [ticketid] [state] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.set_ticket_state(arg[0], arg[1])
+        'set_ticket_state [ticketid] [state]'
+        # 'set_ticket_state [ticketid] [state] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 3:
+            return self.INVALID_ARGS
+        if args[1] not in ["NEW", "PENDING", "RESOLVED", "CLOSED"]:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        result = self.ticket_service.set_ticket_state(ticket_id=args[0], state=args[1])
         return result
 
     def do_open_tickets(self, arg):
         'open_tickets'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
+        args = parse(arg)
+        self.set_user(args[-1])
         result = self.ticket_service.get_all_open_tickets()
         return result
 
     def do_label(self, arg):
         'label [title] [text] [username]'
         args = arg.split()
-        valid, approved = self.user_service.is_approved_admin(args[2])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
         return self.video_service.label(args[0], args[1])
