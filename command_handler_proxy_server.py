@@ -39,7 +39,7 @@ class ClientCommandHandler(cmd.Cmd):
     def do_whoami(self, arg):
         'whoami'
         user = self.user_service.user
-        return user.username if user else 'No one is logged in'
+        return user.username if user else 'No one is logged in', False
 
     def do_signup(self, arg):
         'signup [username] [password]'
