@@ -1,5 +1,6 @@
 import cmd
 from io import StringIO
+import readline
 from unittest import result
 from services.ticket_service import TicketService
 from socket import socket
@@ -114,6 +115,17 @@ class ClientCommandHandler(cmd.Cmd):
         if len(args) != 1:
             return ClientCommandHandler.INVALID_ARGS
         return self.video_service.dislike(args[0])
+    
+    def do_add_comment(self, arg):
+        'add_comment [video_title] [comment_text]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) < 1:
+            return ClientCommandHandler.INVALID_ARGS
+        comment = " ".join(args[1:])
+        return self.video_service.add_comment(video_title=args[0], user=user.username, comment=comment)
 
     def do_video_info(self, arg):
         'video_info [video_title]'
