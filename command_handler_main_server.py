@@ -114,8 +114,14 @@ class ClientCommandHandler(cmd.Cmd):
         if len(args) != 1:
             return ClientCommandHandler.INVALID_ARGS
         return self.video_service.dislike(args[0])
-        
 
+    def do_video_info(self, arg):
+        'video_info [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.get_video(args[0])        
 
     def do_exit(self, arg):
         'type q to exit'
