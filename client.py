@@ -1,4 +1,5 @@
 import socket
+import sys
 from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
 
@@ -35,10 +36,13 @@ response = proxy_socket.recv(1024)
 decoded_res = response.decode('utf-8')
 print(f"{decoded_res}")
 
-mode = input("Please input the executing mode (user/admin)")
+
+mode = sys.argv[1] if len(sys.argv) > 1 else 'user' # admin or user
 sckt = client_socket
 if mode == 'admin':
     sckt = proxy_socket
+elif mode == 'user':
+    sckt = client_socket
 
 def preprocess(command):
     keyword = command.split()[0]
