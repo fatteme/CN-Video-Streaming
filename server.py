@@ -24,7 +24,6 @@ def client_handler(connection):
 
 def proxy_handler(connection):
     proxy_cmd_handler = ProxyCommandHandler()
-    connection.send(str.encode(f'You are now connected to the server...\nType {EXIT_MESSAGE} to exit.\nType help or ? for command list.'))
     while True:
         data = connection.recv(2048)
         message = data.decode('utf-8')

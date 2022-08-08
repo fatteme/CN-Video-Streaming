@@ -155,7 +155,8 @@ class ProxyCommandHandler(cmd.Cmd):
         # 'permissions [admin]' admin is embedded in app
         args = parse(arg)
         self.set_user(args[-1])
-        return f'here is the signup permission list:\n {self.user_service.get_unapproved_users()}'
+        unapproved_users = self.user_service.get_unapproved_users()
+        return f'here is the signup permission list:\n {unapproved_users}' if unapproved_users else 'there is no unapproved user'
 
     def do_approve(self, arg):
         'approve [username]'
