@@ -1,4 +1,5 @@
 import socket
+import sys
 from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
 
@@ -16,6 +17,7 @@ proxy_socket = socket.socket()
 video_socket = socket.socket()
 audio_socket = socket.socket()
 
+
 video_client = ClientVideo()
 
 print('Waiting for connection...')
@@ -28,26 +30,25 @@ except socket.error as e:
 
 response = client_socket.recv(1024)
 decoded_res = response.decode('utf-8')
-if(decoded_res == EXIT_MESSAGE):
-    client_socket.close()
-    print("connection refused.")
-    exit()
 print(f"{decoded_res}")
 
 response = proxy_socket.recv(1024)
 decoded_res = response.decode('utf-8')
 print(f"{decoded_res}")
 
-mode = input("Please input the executing mode (user/admin)")
+
+mode = sys.argv[1] if len(sys.argv) > 1 else 'user' # admin or user
 sckt = client_socket
 if mode == 'admin':
     sckt = proxy_socket
+elif mode == 'user':
+    sckt = client_socket
 
 def preprocess(command):
     keyword = command.split()[0]
     if keyword == "upload":
         video_socket.bind((HOST, video_port))
-        audio_socket.bin((HOST, audio_port))
+        audio_socket.bind((HOST, audio_port))
         name = command.split()[1]
         video_client.send(video_socket=video_socket, audio_socket=audio_socket, name=name)
         # 'upload [title] [ip] [video_port]

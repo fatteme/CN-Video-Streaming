@@ -3,6 +3,7 @@ from io import StringIO
 from unittest import result
 from services.ticket_service import TicketService
 from socket import socket
+from services.video_service import VideoService
 from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
@@ -12,8 +13,11 @@ class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     NOT_LOGGED_IN = f'You are not logged in!'
     prompt = '(youtube) '
+
     user_service = UserService()
     ticket_service = TicketService()
+    video_service = VideoService()
+
     video_server = ServerVideo()
     video_client = ClientVideo()
 
@@ -25,18 +29,17 @@ class ClientCommandHandler(cmd.Cmd):
         return help_output.getvalue()
 
     def do_login(self, arg):
-        'login [type= user | admin | superadmin] [username] [password]'
+        'login [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            return ClientCommandHandler.user_service.get_end_user(username=args[1], password=args[2])
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        elif args[0] == 'superadmin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        return ClientCommandHandler.user_service.get_end_user(username=args[0], password=args[1])
+
+    def do_whoami(self, arg):
+        'whoami'
+        user = self.user_service.user
+        return user.username if user else 'No one is logged in'
+
 
     def do_logout(self, arg):
         'logout'
@@ -44,17 +47,12 @@ class ClientCommandHandler(cmd.Cmd):
         return f'logout successfull.'
     
     def do_signup(self, arg):
-        'signup [type= user | admin] [username] [password]'
+        'signup [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            ClientCommandHandler.user_service.create_end_user(args[1], args[2])
-            return f'signup successfull. Admin permission is needed.'
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        ClientCommandHandler.user_service.create_end_user(args[0], args[1])
+        return f'signup successfull. Admin permission is needed.'
 
     def do_ticket(self, arg):
         'ticket [text]'
@@ -89,7 +87,7 @@ class ClientCommandHandler(cmd.Cmd):
             return ClientCommandHandler.NOT_LOGGED_IN
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
-        ip, video_port = arg[1], int(arg[2])
+        ip, video_port = args[1], int(args[2])
         audio_port = video_port + 1
         video_socket = socket()
         video_socket.connect((ip, video_port))
@@ -97,6 +95,34 @@ class ClientCommandHandler(cmd.Cmd):
         audio_socket.connect((ip, audio_port))
         self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
+    def do_like(self, arg):
+        'like [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.like(args[0])
+    
+    def do_dislike(self, arg):
+        'dislike [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.dislike(args[0])
+
+    def do_video_info(self, arg):
+        'video_info [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.get_video(args[0])        
+
     def do_exit(self, arg):
         'type q to exit'
         return ''
