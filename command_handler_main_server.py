@@ -234,7 +234,9 @@ class ProxyCommandHandler(cmd.Cmd):
         if len(args) != 2:
             return ClientCommandHandler.INVALID_ARGS
         self.set_user(args[-1])
-        return self.video_service.remove_video(args[0])
+        username = self.video_service.get_video_owner(args[0])
+        
+        return f'{self.video_service.remove_video(args[0])}\n{self.user_service.add_strike(username=username)}'
 
     def do_unstrike(self, arg):
         'unstrike [username]'

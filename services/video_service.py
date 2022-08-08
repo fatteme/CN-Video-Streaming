@@ -34,6 +34,10 @@ class VideoService:
         self.commentDBService.add_comment(Comment(user=user, video=video_title, text=comment))
         return f'comment added!, comment: {comment}'
 
+    def get_video_owner(self, title):
+        video: Video = self.videoDBService.get_video(title=title)
+        return video.owner
+
     def get_video(self, title):
         video: Video = self.videoDBService.get_video(title=title)
         video_comments = self.commentDBService.get_all_comments(video=title)
