@@ -88,6 +88,9 @@ class ClientCommandHandler(cmd.Cmd):
             return ClientCommandHandler.NOT_LOGGED_IN
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
+        print(user.strikes)
+        if int(user.strikes) >= 2:
+            return f'Unable to upload video due to strikes'
         ip, video_port = args[1], int(args[2])
         audio_port = video_port + 1
         video_socket = socket()
