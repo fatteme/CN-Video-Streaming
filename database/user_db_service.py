@@ -49,7 +49,9 @@ class UserDBService:
         cursor = self.connector.cursor()
         cursor.execute(query, values)
         result = cursor.fetchone()
-        is_admin = result[3]
+
+
+        is_admin = result[3] if result else False
         if is_admin:
             return Admin(result[0], result[1], result[4])
         else:

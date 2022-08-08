@@ -134,7 +134,15 @@ class ClientCommandHandler(cmd.Cmd):
         user = self.user_service.user
         if len(args) != 1:
             return ClientCommandHandler.INVALID_ARGS
-        return self.video_service.get_video(args[0])        
+        return self.video_service.get_video(args[0])    
+
+    def do_video_labels(self, arg):
+        'video_labels [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.get_video_labels(args[0])        
 
     def do_exit(self, arg):
         'type q to exit'
@@ -204,16 +212,19 @@ class ProxyCommandHandler(cmd.Cmd):
 
     def do_open_tickets(self, arg):
         'open_tickets'
+        # 'open_tickets [admin]' admin is embedded in app
         args = parse(arg)
         self.set_user(args[-1])
         result = self.ticket_service.get_all_open_tickets()
         return result
 
     def do_label(self, arg):
-        'label [title] [text] [username]'
-        args = arg.split()
+        'label [video_title] [text]'
+        # 'label [video_title] [text] [admin]' admin is embedded in app
+        args = parse(arg)
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
         return self.video_service.label(args[0], args[1])
 
 

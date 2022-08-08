@@ -83,7 +83,7 @@ class ClientCommandHandler(cmd.Cmd):
         return self.forward_req()
 
     def do_label(self, arg):
-        'label [title] [text]'
+        'label [video_title] [text]'
         return self.forward_req()
 
 

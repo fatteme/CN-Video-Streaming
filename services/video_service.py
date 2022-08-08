@@ -26,9 +26,9 @@ class VideoService:
 
     def label(self, title, label):
         video: Video = self.videoDBService.get_video(title=title)
-        video.label = label
+        video.label = f'{video.label}, {label}'
         self.videoDBService.update_video(video=video)
-        return f'video label added. label: {video.label}'
+        return f'video label added. labels: {video.label}'
 
     def add_comment(self, video_title, user, comment):
         self.commentDBService.add_comment(Comment(user=user, video=video_title, text=comment))
@@ -39,3 +39,8 @@ class VideoService:
         video_comments = self.commentDBService.get_all_comments(video=title)
         video_comments_str = "\n".join(list(map(lambda c: f'({c.user} - {c.text})', video_comments)))
         return f'video info =>\ntitle:{video.title}, likes:{video.likes}, dislikes:{video.dislikes}, comments:{video_comments_str}'
+
+    def get_video_labels(self, title):
+        video: Video = self.videoDBService.get_video(title=title)
+        print(video.title, video.label)
+        return f'video labels: {video.label}'

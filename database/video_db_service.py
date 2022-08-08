@@ -26,7 +26,7 @@ class VideoDBService:
         print(cursor.rowcount, "record inserted.")
 
     def update_video(self, video: Video):
-        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s, WHERE title = %s"
+        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s WHERE title = %s"
         values = (video.name_identifier, video.adrs, video.available, video.likes, video.dislikes, video.label, video.title)
 
         cursor = self.connector.cursor()
