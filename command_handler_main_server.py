@@ -89,7 +89,7 @@ class ClientCommandHandler(cmd.Cmd):
             return ClientCommandHandler.NOT_LOGGED_IN
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
-        ip, video_port = arg[1], int(arg[2])
+        ip, video_port = args[1], int(args[2])
         audio_port = video_port + 1
         video_socket = socket()
         video_socket.connect((ip, video_port))

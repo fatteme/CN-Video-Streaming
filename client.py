@@ -16,6 +16,7 @@ proxy_socket = socket.socket()
 video_socket = socket.socket()
 audio_socket = socket.socket()
 
+
 video_client = ClientVideo()
 
 print('Waiting for connection...')
@@ -47,7 +48,7 @@ def preprocess(command):
     keyword = command.split()[0]
     if keyword == "upload":
         video_socket.bind((HOST, video_port))
-        audio_socket.bin((HOST, audio_port))
+        audio_socket.bind((HOST, audio_port))
         name = command.split()[1]
         video_client.send(video_socket=video_socket, audio_socket=audio_socket, name=name)
         # 'upload [title] [ip] [video_port]

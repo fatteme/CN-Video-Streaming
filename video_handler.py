@@ -51,7 +51,7 @@ class ServerVideo:
     def get_video(self, vid_name):  # todo assumes adrs from name does not use database
         return os.path.join(os.getcwd(), '../../videos', vid_name)
 
-    def send_audio(self, connection, vid_name):  # assumes video has an audio file with the same address
+    def send_audio(self, vid_name):  # assumes video has an audio file with the same address
         print("Sending Audio ...")
         video_path = self.get_video(vid_name)
         audio_path = video_path.replace(".mp4", ".wav")
@@ -66,17 +66,17 @@ class ServerVideo:
             data = wf.readframes(CHUNK)
             if data == b'':
                 break
-            connection.sendall(data)
+            self.audio_stream_socket.send(data)
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def send_video(self, connection, vid_name):
+    def send_video(self, vid_name):
         print("Sending Video ...")
 
         video_path = self.get_video(vid_name)
         try:
             while True:
-                if connection:
+                if self.video_stream_socket:
                     vid = cv2.VideoCapture(video_path)
 
                     success = True
@@ -84,7 +84,7 @@ class ServerVideo:
                         success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
-                        connection.sendall(message)
+                        self.video_stream_socket.send(message)
                 break
         except:
             print("exception occured! (video)")
@@ -198,7 +198,7 @@ class ClientVideo:  # only should have instances in EndUser
     def get_video(self, path):
         return os.path.join(self.path, path)
 
-    def send_audio(self, connection, path):  # specify path from current folder
+    def send_audio(self, path):  # specify path from current folder
         print("Uploading Audio ...")
 
         video_path = self.get_video(path)
@@ -221,13 +221,14 @@ class ClientVideo:  # only should have instances in EndUser
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def send_video(self, connection, path):
+    def send_video(self, path):
         print("Uploading Video ...")
 
         video_path = self.get_video(path)
         try:
             while True:
-                if connection:
+                if self.video_stream_socket:
+                    print("socket is connected")
                     vid = cv2.VideoCapture(video_path)
 
                     success = True
