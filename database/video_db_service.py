@@ -13,7 +13,7 @@ class VideoDBService:
         self.table = "Video"
 
     def create_video(self, video: Video):
-        query = f"INSERT INTO {self.table} (title, name_identifier, owner, adrs, available, likes, dislikes) Values (%s, %s, %s, %s, %s, %s, %s)"
+        query = f"INSERT INTO {self.table} (title, name_identifier, owner, adrs, available, likes, dislikes, label) Values (%s, %s, %s, %s, %s, %s, %s, %s)"
         video_dict = video.export()
         del video_dict["comments"]
         assert len(video_dict) == 7
@@ -26,8 +26,8 @@ class VideoDBService:
         print(cursor.rowcount, "record inserted.")
 
     def update_video(self, video: Video):
-        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s WHERE title = %s"
-        values = (video.name_identifier, video.adrs, video.available, video.likes, video.dislikes, video.title)
+        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s WHERE title = %s"
+        values = (video.name_identifier, video.adrs, video.available, video.likes, video.dislikes, video.label, video.title)
 
         cursor = self.connector.cursor()
         cursor.execute(query, values)

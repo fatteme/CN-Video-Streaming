@@ -1,12 +1,12 @@
 import socket
-from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR
+from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
 
 from video_handler import ClientVideo
 
 video_port = randint(1024, 65536)
 audio_port = video_port + 1
-while video_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SEREVR] or audio_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SEREVR]:
+while video_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER] or audio_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER]:
     video_port = randint(1024, 65536)
     audio_port = video_port + 1
 
