@@ -86,6 +86,10 @@ class ClientCommandHandler(cmd.Cmd):
         'label [video_title] [text]'
         return self.forward_req()
 
+    def do_remove(self, arg):
+        'remove [video_title]'
+        return self.forward_req()
+
 
 def parse(arg):
     return arg.split()

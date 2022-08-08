@@ -42,3 +42,14 @@ class VideoDBService:
         cursor.execute(query, values)
         result = cursor.fetchone()
         return Video(*result)
+    
+
+    def delete_video(self, title):
+        query = f"DELETE from {self.table} WHERE title = %s"
+        values = (title,)
+        cursor = self.connector.cursor()
+        cursor.execute(query, values)
+        self.connector.commit()
+        
+        print(cursor.rowcount, "record(s) affected")
+

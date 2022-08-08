@@ -226,6 +226,15 @@ class ProxyCommandHandler(cmd.Cmd):
             return ClientCommandHandler.INVALID_ARGS
         self.set_user(args[-1])
         return self.video_service.label(args[0], args[1])
+    
+    def do_remove(self, arg):
+        'remove [video_title]'
+        # 'remove [video_title] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) != 2:
+            return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
+        return self.video_service.remove_video(args[0])
 
 
 def parse(arg):

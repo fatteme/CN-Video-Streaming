@@ -42,5 +42,8 @@ class VideoService:
 
     def get_video_labels(self, title):
         video: Video = self.videoDBService.get_video(title=title)
-        print(video.title, video.label)
         return f'video labels: {video.label}'
+
+    def remove_video(self, title):
+        self.videoDBService.delete_video(title=title)
+        return f'video {title} removed.'
