@@ -3,6 +3,7 @@ from io import StringIO
 from unittest import result
 from services.ticket_service import TicketService
 from socket import socket
+from services.video_service import VideoService
 from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
@@ -14,6 +15,8 @@ class ClientCommandHandler(cmd.Cmd):
     prompt = '(youtube) '
     user_service = UserService()
     ticket_service = TicketService()
+    video_service = VideoService()
+
     video_server = ServerVideo()
     video_client = ClientVideo()
 
@@ -97,6 +100,28 @@ class ClientCommandHandler(cmd.Cmd):
         audio_socket.connect((ip, audio_port))
         self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
+    def do_like(self, arg):
+        'like [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.like(args[0])
+    
+    def do_dislike(self, arg):
+        'dislike [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.dislike(args[0])
+        
+
+
     def do_exit(self, arg):
         'type q to exit'
         return ''

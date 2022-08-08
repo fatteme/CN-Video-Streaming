@@ -38,7 +38,7 @@ class VideoDBService:
     def get_video(self, title):
         query = f"SELECT * from {self.table} WHERE title = %s"
         values = (title,)
-
         cursor = self.connector.cursor()
         cursor.execute(query, values)
         result = cursor.fetchone()
+        return Video(*result)
