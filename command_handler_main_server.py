@@ -1,14 +1,13 @@
 import cmd
 from io import StringIO
-import readline
-from unittest import result
-from services.ticket_service import TicketService
 from socket import socket
-from services.video_service import VideoService
-from video_handler import ServerVideo, ClientVideo
 
-from services.user_service import UserService
 from consts import OUT_OF_NETWORK_ERROR, SUPERUSER
+from services.ticket_service import TicketService
+from services.user_service import UserService
+from services.video_service import VideoService
+from video_handler import ClientVideo, ServerVideo
+
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
@@ -145,22 +144,23 @@ class ProxyCommandHandler(cmd.Cmd):
     user_service = UserService()
     ticket_service = TicketService()
 
-    def do_help(self, arg: str) -> str:
-        'help or ?'
-        help_output = StringIO()
-        super().__setattr__('stdout', help_output)
-        super().do_help(arg)
-        return help_output.getvalue()
+    def set_user(self, username):
+        self.user_service.set_proxy_user(username=username)
     
     def do_permissions(self, arg):
         'permissions'
+        # 'permissions [admin]' admin is embedded in app
+        args = parse(arg)
+        self.set_user(args[-1])
         return f'here is the signup permission list:\n {self.user_service.get_unapproved_users()}'
 
     def do_approve(self, arg):
         'approve [username]'
+        # 'approve [username] [admin]' admin is embedded in app
         args = parse(arg)
-        if len(args) < 1:
+        if len(args) < 2:
             return self.INVALID_ARGS
+        self.set_user(args[-1])
         return self.user_service.approve(args[0])
 
     def do_ticket(self, arg):
@@ -202,10 +202,6 @@ class ProxyCommandHandler(cmd.Cmd):
             return "You are not approved by the super user!"
         result = self.ticket_service.get_all_open_tickets()
         return result
-
-    def do_exit(self, arg):
-        'type q to exit'
-        return ''
 
     def do_label(self, arg):
         'label [title] [text] user'

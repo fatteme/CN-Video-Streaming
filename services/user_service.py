@@ -50,6 +50,14 @@ class UserService:
             return 'super admin logged in successfully.'
         else:
             return 'username or password is incorrect'
+    
+    def set_proxy_user(self, username):
+        if username == 'manager':
+            user = SuperAdmin.getInstance()
+        else:
+            user = self.userDBService.get_user(username=username)
+        self.user = user
+
 
     def get_unapproved_users(self):
         if not self.user:
