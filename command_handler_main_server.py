@@ -1,8 +1,10 @@
 import cmd
 from io import StringIO
+import readline
 from unittest import result
 from services.ticket_service import TicketService
 from socket import socket
+from services.video_service import VideoService
 from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
@@ -12,10 +14,14 @@ class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     NOT_LOGGED_IN = f'You are not logged in!'
     prompt = '(youtube) '
+
     user_service = UserService()
     ticket_service = TicketService()
+
     video_server_service = ServerVideo()
     video_client_service = ClientVideo()
+    video_service = VideoService()
+
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -25,18 +31,17 @@ class ClientCommandHandler(cmd.Cmd):
         return help_output.getvalue()
 
     def do_login(self, arg):
-        'login [type= user | admin | superadmin] [username] [password]'
+        'login [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            return ClientCommandHandler.user_service.get_end_user(username=args[1], password=args[2])
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        elif args[0] == 'superadmin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        return ClientCommandHandler.user_service.get_end_user(username=args[0], password=args[1])
+
+    def do_whoami(self, arg):
+        'whoami'
+        user = self.user_service.user
+        return user.username if user else 'No one is logged in'
+
 
     def do_logout(self, arg):
         'logout'
@@ -44,17 +49,12 @@ class ClientCommandHandler(cmd.Cmd):
         return f'logout successfull.'
     
     def do_signup(self, arg):
-        'signup [type= user | admin] [username] [password]'
+        'signup [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            ClientCommandHandler.user_service.create_end_user(args[1], args[2])
-            return f'signup successfull. Admin permission is needed.'
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        ClientCommandHandler.user_service.create_end_user(args[0], args[1])
+        return f'signup successfull. Admin permission is needed.'
 
     def do_ticket(self, arg):
         'ticket [text]'
@@ -98,6 +98,45 @@ class ClientCommandHandler(cmd.Cmd):
         title = args[0].split("/")[-1]
         self.video_server_service.receive(title=title, username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
+    def do_like(self, arg):
+        'like [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.like(args[0])
+    
+    def do_dislike(self, arg):
+        'dislike [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.dislike(args[0])
+    
+    def do_add_comment(self, arg):
+        'add_comment [video_title] [comment_text]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) < 1:
+            return ClientCommandHandler.INVALID_ARGS
+        comment = " ".join(args[1:])
+        return self.video_service.add_comment(video_title=args[0], user=user.username, comment=comment)
+
+    def do_video_info(self, arg):
+        'video_info [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.get_video(args[0])        
+
     def do_exit(self, arg):
         'type q to exit'
         return ''
@@ -169,6 +208,15 @@ class ProxyCommandHandler(cmd.Cmd):
     def do_exit(self, arg):
         'type q to exit'
         return ''
+
+    def do_label(self, arg):
+        'label [title] [text] user'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+
 
 def parse(arg):
     return arg.split()

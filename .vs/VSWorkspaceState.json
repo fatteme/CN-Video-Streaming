@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\models",
+    "\\models\\user",
+    "\\models\\video",
+    "\\services"
+  ],
+  "SelectedNode": "\\video_handler.py",
+  "PreviewInSolutionExplorer": false
+}

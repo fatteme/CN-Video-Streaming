@@ -72,6 +72,7 @@ class ClientCommandHandler(cmd.Cmd):
             return OUT_OF_NETWORK_ERROR, False
         return self.user_service.user.username, True
 
+<<<<<<< HEAD
     def do_permissions(self, arg):
         'permissions'
         if not self.has_logged_in():
@@ -80,6 +81,10 @@ class ClientCommandHandler(cmd.Cmd):
 
     def do_approve(self, arg):
         'approve [username]'
+=======
+    def do_label(self, arg):
+        'label [title] [text]'
+>>>>>>> c7f6c24e9dcb5e4221b955da5b0948fb26b9baad
         if not self.has_logged_in():
             return OUT_OF_NETWORK_ERROR, False
         return self.user_service.user.username, True

@@ -23,14 +23,17 @@ class CommentDBService:
         print(cursor.rowcount, "record inserted.")
 
     def get_all_comments(self, video: str):
-        query = f"SELECT (username, text) from {self.table} JOIN Video ON {self.table}.video = Video.title WHERE video = %s"
+        query = f"SELECT * from {self.table} WHERE video = %s"
         values = (video,)
-
         cursor = self.connector.cursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
+
+        comments = []
         for res in results:
-            yield Comment(res[0], video, res[1])
+            comments.append(Comment(*res))
+            
+        return comments
 
 
         

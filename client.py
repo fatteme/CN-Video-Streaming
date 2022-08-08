@@ -1,4 +1,5 @@
 import socket
+import sys
 from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
 
@@ -10,7 +11,7 @@ while video_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER] or audio_por
     video_port = randint(1024, 65536)
     audio_port = video_port + 1
 
-mode = input("Please input the executing mode (user/admin)")
+mode = sys.argv[1] if len(sys.argv) > 1 else 'user' # admin or user
 
 sckt = socket.socket()
 if mode == 'user':
