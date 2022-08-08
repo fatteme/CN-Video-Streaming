@@ -72,9 +72,7 @@ while True:
             break
         print(f"{decoded_res}")
 
+sckt.close()
 if mode == 'user':
-    client_socket.close()
     video_socket.close()
     audio_socket.close()
-elif mode == 'admin':
-    proxy_socket.close()
