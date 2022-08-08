@@ -2,15 +2,20 @@ import cmd
 from io import StringIO
 from unittest import result
 from services.ticket_service import TicketService
+from socket import socket
+from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
 from consts import OUT_OF_NETWORK_ERROR, SUPERUSER
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
+    NOT_LOGGED_IN = f'You are not logged in!'
     prompt = '(youtube) '
     user_service = UserService()
     ticket_service = TicketService()
+    video_server = ServerVideo()
+    video_client = ClientVideo()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -54,23 +59,43 @@ class ClientCommandHandler(cmd.Cmd):
     def do_ticket(self, arg):
         'ticket [text]'
         if not self.user_service.user:
-            return "You are not logged in!"
-        result = self.ticket_service.create_ticket(arg[0], self.user_service.user.username)
+            return ClientCommandHandler.NOT_LOGGED_IN
+        args = parse(arg)
+        result = self.ticket_service.create_ticket(args[0], self.user_service.user.username)
         return result
 
     def do_set_ticket_state(self, arg):
         'set_ticket_state [ticketid] [state]'
         if not self.user_service.user:
-            return "You are not logged in!"
-        result = self.ticket_service.set_ticket_state(arg[0], arg[1], self.user_service.user.username)
+            return ClientCommandHandler.NOT_LOGGED_IN
+        args = parse(arg)
+        result = self.ticket_service.set_ticket_state(args[0], args[1], self.user_service.user.username)
         return result
 
     def do_my_tickets(self, arg):
         'my_tickets'
         if not self.user_service.user:
-            return "You are not logged in!"
+            return ClientCommandHandler.NOT_LOGGED_IN
+        args = parse(arg)
         result = self.ticket_service.get_all_user_tickets(self.user_service.user.username)
         return result
+    
+    def do_upload(self, arg):
+        'upload [name]'
+        # 'upload [name] [ip] [video_port] embedded in client code
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) != 3:
+            return ClientCommandHandler.INVALID_ARGS
+        ip, video_port = arg[1], int(arg[2])
+        audio_port = video_port + 1
+        video_socket = socket()
+        video_socket.connect((ip, video_port))
+        audio_socket = socket()
+        audio_socket.connect((ip, audio_port))
+        self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
     def do_exit(self, arg):
         'type q to exit'
