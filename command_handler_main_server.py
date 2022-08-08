@@ -13,6 +13,7 @@ class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
     NOT_LOGGED_IN = f'You are not logged in!'
     prompt = '(youtube) '
+
     user_service = UserService()
     ticket_service = TicketService()
     video_service = VideoService()
@@ -28,18 +29,17 @@ class ClientCommandHandler(cmd.Cmd):
         return help_output.getvalue()
 
     def do_login(self, arg):
-        'login [type= user | admin | superadmin] [username] [password]'
+        'login [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            return ClientCommandHandler.user_service.get_end_user(username=args[1], password=args[2])
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        elif args[0] == 'superadmin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        return ClientCommandHandler.user_service.get_end_user(username=args[0], password=args[1])
+
+    def do_whoami(self, arg):
+        'whoami'
+        user = self.user_service.user
+        return user.username if user else 'No one is logged in'
+
 
     def do_logout(self, arg):
         'logout'
@@ -47,17 +47,12 @@ class ClientCommandHandler(cmd.Cmd):
         return f'logout successfull.'
     
     def do_signup(self, arg):
-        'signup [type= user | admin] [username] [password]'
+        'signup [username] [password]'
         args = parse(arg)
-        if len(args) < 3:
+        if len(args) < 2:
             return ClientCommandHandler.INVALID_ARGS
-        if args[0] == 'user':
-            ClientCommandHandler.user_service.create_end_user(args[1], args[2])
-            return f'signup successfull. Admin permission is needed.'
-        elif args[0] == 'admin':
-            return OUT_OF_NETWORK_ERROR
-        else:
-            return ClientCommandHandler.INVALID_ARGS
+        ClientCommandHandler.user_service.create_end_user(args[0], args[1])
+        return f'signup successfull. Admin permission is needed.'
 
     def do_ticket(self, arg):
         'ticket [text]'
