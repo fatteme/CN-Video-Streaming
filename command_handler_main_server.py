@@ -132,6 +132,7 @@ class ProxyCommandHandler(cmd.Cmd):
     prompt = '(turtle) '
     user_service = UserService()
     ticket_service = TicketService()
+    video_service = VideoService()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -196,12 +197,16 @@ class ProxyCommandHandler(cmd.Cmd):
         return ''
 
     def do_label(self, arg):
-        'label [title] [text] user'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
+        'label [title] [text] [username]'
+        args = arg.split()
+        valid, approved = self.user_service.is_approved_admin(args[2])
         if not valid:
             return "Username invalid!"
         if not approved:
             return "You are not approved by the super user!"
+        if len(args) != 3:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.label(args[0], args[1])
 
 
 def parse(arg):
