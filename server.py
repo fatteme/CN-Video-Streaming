@@ -41,7 +41,6 @@ def accept_connections(ssocket: socket, handler=client_handler):
     port = address[1]
     if DDos_handler.checkDDos(ip=ip):
         print("closing connection")
-        Client.sendall(str.encode(EXIT_MESSAGE))
         Client.close()
         return
     print(f'Connected to: {ip}:{str(port)}')

@@ -29,10 +29,6 @@ except socket.error as e:
 
 response = client_socket.recv(1024)
 decoded_res = response.decode('utf-8')
-if(decoded_res == EXIT_MESSAGE):
-    client_socket.close()
-    print("connection refused.")
-    exit()
 print(f"{decoded_res}")
 
 response = proxy_socket.recv(1024)
