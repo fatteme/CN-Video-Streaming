@@ -4,6 +4,9 @@ from _thread import *
 from command_handler_main_server import ClientCommandHandler
 from command_handler_main_server import ProxyCommandHandler
 from consts import EXIT_MESSAGE, HOST, PORT, PORT_P_MAIN_SERVER
+from ddos_handler import DDosHandler
+
+DDos_handler = DDosHandler()
 
 def client_handler(connection):
     client_cmd_handler = ClientCommandHandler()
@@ -32,9 +35,16 @@ def proxy_handler(connection):
         connection.sendall(str.encode(reply))
     connection.close()
 
-def accept_connections(ssocket, handler=client_handler):
+def accept_connections(ssocket: socket, handler=client_handler):
     Client, address = ssocket.accept()
-    print(f'Connected to: {address[0]}:{str(address[1])}')
+    ip = address[0]
+    port = address[1]
+    if DDos_handler.checkDDos(ip=ip):
+        print("closing connection")
+        Client.sendall(str.encode(EXIT_MESSAGE))
+        Client.close()
+        return
+    print(f'Connected to: {ip}:{str(port)}')
     start_new_thread(handler, (Client, ))
 
 server_socket_c = socket.socket()  # client
