@@ -1,14 +1,17 @@
 import cmd
 from io import StringIO
+import os
 import readline
 from unittest import result
+from database.video_db_service import VideoDBService
+from models.video.video import Video
 from services.ticket_service import TicketService
 from socket import socket
 from services.video_service import VideoService
 from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
-from consts import OUT_OF_NETWORK_ERROR, SUPERUSER
+from consts import DB_CONFIG, SUPERUSER, VIDEO_FOLDER_ADDRESS
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
@@ -21,6 +24,7 @@ class ClientCommandHandler(cmd.Cmd):
     video_server_service = ServerVideo()
     video_client_service = ClientVideo()
     video_service = VideoService()
+    video_db_service = VideoDBService(DB_CONFIG)
 
 
     def do_help(self, arg: str) -> str:
@@ -96,7 +100,36 @@ class ClientCommandHandler(cmd.Cmd):
         audio_socket = socket()
         audio_socket.connect((ip, audio_port))
         title = args[0].split("/")[-1]
-        self.video_server_service.receive(title=title, username=user.username, video_socket=video_socket, audio_socket=audio_socket)
+        try:
+            video = Video(title, user.username, os.path.join(VIDEO_FOLDER_ADDRESS, title))
+            print("video created")
+            self.video_db_service.create_video(video)
+            print("done inserting to the db.")
+        except:
+            return "Error while uploading (possibly duplicate title)"
+        print("uploading ...")
+        self.video_server_service.receive(title=title, video_socket=video_socket, audio_socket=audio_socket)
+        return "Upload successful"
+
+    def do_watch(self, arg):
+        'watch [name]'
+        # 'upload [name] [ip] [video_port] embedded in client code
+        args = parse(arg)
+        ip, video_port = args[1], int(args[2])
+        audio_port = video_port + 1
+        video_socket = socket()
+        video_socket.connect((ip, video_port))
+        audio_socket = socket()
+        audio_socket.connect((ip, audio_port))
+        title = args[0].split("/")[-1]
+        
+        try:
+            video = self.video_db_service.get_video(title)
+            print("video adrs:", video.adrs)
+        except:
+            return "Video not found!"
+        self.video_server_service.send(path=video.adrs, video_socket=video_socket, audio_socket=audio_socket)
+        return "End of the video."
     
     def do_like(self, arg):
         'like [video_title]'

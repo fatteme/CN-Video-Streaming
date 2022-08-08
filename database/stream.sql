@@ -2,10 +2,10 @@
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Aug 03, 2022 at 02:40 PM
--- Server version: 10.4.21-MariaDB
--- PHP Version: 7.4.29
+-- Host: 127.0.0.1
+-- Generation Time: Aug 08, 2022 at 10:54 PM
+-- Server version: 10.4.24-MariaDB
+-- PHP Version: 8.1.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,10 +24,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Comment`
+-- Table structure for table `comment`
 --
 
-CREATE TABLE `Comment` (
+CREATE TABLE `comment` (
   `username` varchar(128) NOT NULL,
   `video` varchar(256) NOT NULL,
   `text` varchar(1024) NOT NULL DEFAULT 'no comment'
@@ -50,10 +50,10 @@ CREATE TABLE `ticket` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `User`
+-- Table structure for table `user`
 --
 
-CREATE TABLE `User` (
+CREATE TABLE `user` (
   `username` varchar(128) NOT NULL,
   `password` varchar(128) NOT NULL,
   `strikes` int(16) NOT NULL DEFAULT 0,
@@ -62,27 +62,29 @@ CREATE TABLE `User` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `User`
+-- Dumping data for table `user`
 --
 
-INSERT INTO `User` (`username`, `password`, `strikes`, `is_admin`, `is_approved`) VALUES
-('user1', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', 0, 0, 0),
-('user2', 'd4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35', 0, 0, 0);
+INSERT INTO `user` (`username`, `password`, `strikes`, `is_admin`, `is_approved`) VALUES
+('user1', '123', 0, 1, 1),
+('user2', 'd4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35', 0, 0, 0),
+('user3', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 0, 1, 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Video`
+-- Table structure for table `video`
 --
 
-CREATE TABLE `Video` (
+CREATE TABLE `video` (
   `title` varchar(256) NOT NULL,
   `name_identifier` varchar(128) NOT NULL,
   `owner` varchar(128) NOT NULL,
   `adrs` varchar(512) NOT NULL,
   `available` tinyint(1) NOT NULL DEFAULT 1,
   `likes` tinyint(1) NOT NULL DEFAULT 0,
-  `dislikes` tinyint(1) NOT NULL DEFAULT 0
+  `dislikes` tinyint(1) NOT NULL DEFAULT 0,
+  `label` varchar(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
@@ -90,9 +92,9 @@ CREATE TABLE `Video` (
 --
 
 --
--- Indexes for table `Comment`
+-- Indexes for table `comment`
 --
-ALTER TABLE `Comment`
+ALTER TABLE `comment`
   ADD KEY `video` (`video`),
   ADD KEY `user` (`username`) USING BTREE;
 
@@ -104,15 +106,15 @@ ALTER TABLE `ticket`
   ADD UNIQUE KEY `assignee` (`assignee`);
 
 --
--- Indexes for table `User`
+-- Indexes for table `user`
 --
-ALTER TABLE `User`
+ALTER TABLE `user`
   ADD PRIMARY KEY (`username`);
 
 --
--- Indexes for table `Video`
+-- Indexes for table `video`
 --
-ALTER TABLE `Video`
+ALTER TABLE `video`
   ADD PRIMARY KEY (`title`),
   ADD KEY `name_id` (`name_identifier`),
   ADD KEY `owner` (`owner`);
@@ -122,24 +124,24 @@ ALTER TABLE `Video`
 --
 
 --
--- Constraints for table `Comment`
+-- Constraints for table `comment`
 --
-ALTER TABLE `Comment`
-  ADD CONSTRAINT `user` FOREIGN KEY (`username`) REFERENCES `User` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `video` FOREIGN KEY (`video`) REFERENCES `Video` (`title`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `comment`
+  ADD CONSTRAINT `user` FOREIGN KEY (`username`) REFERENCES `user` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `video` FOREIGN KEY (`video`) REFERENCES `video` (`title`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `ticket`
 --
 ALTER TABLE `ticket`
-  ADD CONSTRAINT `admin` FOREIGN KEY (`assignee`) REFERENCES `User` (`username`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `user_f` FOREIGN KEY (`user`) REFERENCES `User` (`username`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `admin` FOREIGN KEY (`assignee`) REFERENCES `user` (`username`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_f` FOREIGN KEY (`user`) REFERENCES `user` (`username`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `Video`
+-- Constraints for table `video`
 --
-ALTER TABLE `Video`
-  ADD CONSTRAINT `owner` FOREIGN KEY (`owner`) REFERENCES `User` (`username`);
+ALTER TABLE `video`
+  ADD CONSTRAINT `owner` FOREIGN KEY (`owner`) REFERENCES `user` (`username`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

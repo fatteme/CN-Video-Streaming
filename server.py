@@ -6,7 +6,7 @@ from command_handler_main_server import ProxyCommandHandler
 from consts import EXIT_MESSAGE, HOST, PORT, PORT_P_MAIN_SERVER
 from ddos_handler import DDosHandler
 
-DDos_handler = DDosHandler()
+ddos_handler = DDosHandler()
 
 def client_handler(connection):
     client_cmd_handler = ClientCommandHandler()
@@ -39,7 +39,7 @@ def accept_connections(ssocket: socket, handler=client_handler):
     Client, address = ssocket.accept()
     ip = address[0]
     port = address[1]
-    if DDos_handler.checkDDos(ip=ip):
+    if ddos_handler.checkDDos(ip=ip):
         print("closing connection")
         Client.close()
         return

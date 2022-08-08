@@ -2,6 +2,7 @@ import socket
 import sys
 from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
+import time
 
 from video_handler import ClientVideo
 
@@ -18,6 +19,10 @@ if mode == 'user':
     video_client_service = ClientVideo()
     video_socket = socket.socket()
     audio_socket = socket.socket()
+    video_socket.bind((HOST, video_port))
+    audio_socket.bind((HOST, audio_port))
+    video_socket.listen()
+    audio_socket.listen()
 
 print('Waiting for connection...')
 try:
@@ -39,11 +44,6 @@ print(f"{decoded_res}")
 def preprocess(command, sckt):
     keyword = command.split()[0]
     if keyword == "upload":
-        video_socket.bind((HOST, video_port))
-        audio_socket.bind((HOST, audio_port))
-        video_socket.listen()
-        audio_socket.listen()
-
         # 'upload [title] [ip] [video_port]
         command += f' {HOST} {video_port}'
         sckt.send(str.encode(command))
@@ -51,12 +51,31 @@ def preprocess(command, sckt):
         video_client, _ = video_socket.accept()
         audio_client, _ = audio_socket.accept()
 
+        time.sleep(1)
         name = command.split()[1]
         video_client_service.send(video_socket=video_client, audio_socket=audio_client, name=name)
 
         response = sckt.recv(1024)
         decoded_res = response.decode('utf-8')
         print(decoded_res)
+        video_socket.close()
+        audio_socket.close()
+        return True
+    elif keyword == "watch":
+        # 'upload [title] [ip] [video_port]
+        command += f' {HOST} {video_port}'
+        sckt.send(str.encode(command))
+
+        video_client, _ = video_socket.accept()
+        audio_client, _ = audio_socket.accept()
+
+        video_client_service.receive(video_socket=video_client, audio_socket=audio_client)
+
+        response = sckt.recv(1024)
+        decoded_res = response.decode('utf-8')
+        print(decoded_res)
+        video_socket.close()
+        audio_socket.close()
         return True
     return False
 
@@ -74,6 +93,3 @@ while True:
         print(f"{decoded_res}")
 
 sckt.close()
-if mode == 'user':
-    video_socket.close()
-    audio_socket.close()

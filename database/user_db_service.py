@@ -13,7 +13,7 @@ class UserDBService:
             # password=config["password"],
             database=config["database"]
             )
-        self.table = "User"
+        self.table = "user"
 
     def create_user(self, user):
         query = f"INSERT INTO {self.table} (username, password, strikes, is_admin, is_approved) Values (%s, %s, %s, %s, %s)"

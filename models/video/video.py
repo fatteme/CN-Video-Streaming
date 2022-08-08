@@ -2,7 +2,7 @@ from uuid import uuid4
 
 
 class Video:
-    def __init__(self, title, owner, adrs, name_identifier=None, availabe=True, likes=0, dislikes=0, comments=[], label=""):
+    def __init__(self, title, owner, adrs, name_identifier=None, availabe=True, likes=0, dislikes=0, label=""):
         self.title = title
         self.name_identifier = name_identifier
         if not self.name_identifier:
@@ -12,7 +12,7 @@ class Video:
         self.available = availabe
         self.likes = likes
         self.dislikes = dislikes
-        self.comments = comments
+        self.comments = []
         self.label = label
 
     def export(self):

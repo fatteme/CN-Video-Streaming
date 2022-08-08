@@ -10,20 +10,23 @@ class VideoDBService:
             # password=config["password"],
             database=config["database"]
             )
-        self.table = "Video"
+        self.table = "video"
 
     def create_video(self, video: Video):
-        query = f"INSERT INTO {self.table} (title, name_identifier, owner, adrs, available, likes, dislikes, label) Values (%s, %s, %s, %s, %s, %s, %s, %s)"
-        video_dict = video.export()
-        del video_dict["comments"]
-        assert len(video_dict) == 7
-        values = tuple(video_dict.values())
+        try:
+            query = f"INSERT INTO {self.table} (title, name_identifier, owner, adrs, available, likes, dislikes, label) Values (%s, %s, %s, %s, %s, %s, %s, %s)"
+            video_dict = video.export()
+            del video_dict["comments"]
+            values = tuple(video_dict.values())
 
-        cursor = self.connector.cursor()
-        cursor.execute(query, values)
-        self.connector.commit()
+            print("values:", values)
+            cursor = self.connector.cursor()
+            cursor.execute(query, values)
+            self.connector.commit()
 
-        print(cursor.rowcount, "record inserted.")
+            print(cursor.rowcount, "record inserted.")
+        except Exception as e:
+            print(e)
 
     def update_video(self, video: Video):
         query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s, WHERE title = %s"
@@ -41,4 +44,6 @@ class VideoDBService:
         cursor = self.connector.cursor()
         cursor.execute(query, values)
         result = cursor.fetchone()
-        return Video(*result)
+        return Video(title=result[0], name_identifier=result[1],
+            owner=result[2], adrs=result[3], availabe=result[4], likes=result[5],
+            dislikes=result[6], label=result[7])
