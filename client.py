@@ -10,62 +10,71 @@ while video_port in [PORT, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER] or audio_por
     video_port = randint(1024, 65536)
     audio_port = video_port + 1
 
-client_socket = socket.socket()
-proxy_socket = socket.socket()
+mode = input("Please input the executing mode (user/admin)")
 
-video_socket = socket.socket()
-audio_socket = socket.socket()
-
-
-video_client = ClientVideo()
+sckt = socket.socket()
+if mode == 'user':
+    video_client_service = ClientVideo()
+    video_socket = socket.socket()
+    audio_socket = socket.socket()
 
 print('Waiting for connection...')
 try:
-    client_socket.connect((HOST, PORT))
-    proxy_socket.connect((HOST, PORT_P_PROXY_SEREVR))
+    port = PORT_P_PROXY_SEREVR if mode == "admin" else PORT
+    sckt.connect((HOST, port))
 except socket.error as e:
     print(f"An error occurred {str(e)}")
     exit()
 
-response = client_socket.recv(1024)
+response = sckt.recv(1024)
 decoded_res = response.decode('utf-8')
 if(decoded_res == EXIT_MESSAGE):
-    client_socket.close()
+    sckt.close()
     print("connection refused.")
     exit()
 print(f"{decoded_res}")
 
-response = proxy_socket.recv(1024)
-decoded_res = response.decode('utf-8')
-print(f"{decoded_res}")
 
-mode = input("Please input the executing mode (user/admin)")
-sckt = client_socket
-if mode == 'admin':
-    sckt = proxy_socket
-
-def preprocess(command):
+def preprocess(command, sckt):
     keyword = command.split()[0]
     if keyword == "upload":
         video_socket.bind((HOST, video_port))
         audio_socket.bind((HOST, audio_port))
-        name = command.split()[1]
-        video_client.send(video_socket=video_socket, audio_socket=audio_socket, name=name)
+        video_socket.listen()
+        audio_socket.listen()
+
         # 'upload [title] [ip] [video_port]
         command += f' {HOST} {video_port}'
-    return command
+        sckt.send(str.encode(command))
+
+        video_client, _ = video_socket.accept()
+        audio_client, _ = audio_socket.accept()
+
+        name = command.split()[1]
+        video_client_service.send(video_socket=video_client, audio_socket=audio_client, name=name)
+
+        response = sckt.recv(1024)
+        decoded_res = response.decode('utf-8')
+        print(decoded_res)
+        return True
+    return False
 
 while True:
     command = input('Your command: ')
     if not command:
         continue
-    command = preprocess(command)
-    sckt.send(str.encode(command))
-    response = sckt.recv(1024)
-    decoded_res = response.decode('utf-8')
-    if(decoded_res == EXIT_MESSAGE):
-        break
-    print(f"{decoded_res}")
+    already_sent = preprocess(command, sckt)
+    if not already_sent:
+        sckt.send(str.encode(command))
+        response = sckt.recv(1024)
+        decoded_res = response.decode('utf-8')
+        if(decoded_res == EXIT_MESSAGE):
+            break
+        print(f"{decoded_res}")
 
-client_socket.close()
-proxy_socket.close()
+if mode == 'user':
+    client_socket.close()
+    video_socket.close()
+    audio_socket.close()
+elif mode == 'admin':
+    proxy_socket.close()

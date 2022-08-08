@@ -14,8 +14,8 @@ class ClientCommandHandler(cmd.Cmd):
     prompt = '(youtube) '
     user_service = UserService()
     ticket_service = TicketService()
-    video_server = ServerVideo()
-    video_client = ClientVideo()
+    video_server_service = ServerVideo()
+    video_client_service = ClientVideo()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -95,7 +95,8 @@ class ClientCommandHandler(cmd.Cmd):
         video_socket.connect((ip, video_port))
         audio_socket = socket()
         audio_socket.connect((ip, audio_port))
-        self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
+        title = args[0].split("/")[-1]
+        self.video_server_service.receive(title=title, username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
     def do_exit(self, arg):
         'type q to exit'
