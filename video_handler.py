@@ -3,9 +3,10 @@ import threading
 
 # testing imports
 from models.user.end_user import EndUser
-
-
 from models.video.video import Video
+
+from consts import VIDEO_FOLDER_ADDRESS
+
 import cv2
 import wave
 import time
@@ -20,40 +21,38 @@ from consts import HOST, PORT, EXIT_MESSAGE
 
 class ServerVideo:
 
-    def __init__(self):
-        self.audio_stream_socket = None
-        self.video_stream_socket = None
-        self.video_stream_thread = None
-        self.audio_stream_thread = None
+    # def __init__(self):
+    #     self.audio_stream_socket = None
+    #     self.video_stream_socket = None
+    #     self.video_stream_thread = None
+    #     self.audio_stream_thread = None
 
-    def send(self, connection, name):
-        video_stream_thread = threading.Thread(target=self.send_video, args=(connection, name))
-        audio_stream_thread = threading.Thread(target=self.send_audio, args=(connection, name))
+    def send(self, title,  video_socket, audio_socket):
+        video_stream_thread = threading.Thread(target=self.send_video, args=(video_socket, title))
+        audio_stream_thread = threading.Thread(target=self.send_audio, args=(audio_socket, title))
         video_stream_thread.start()
         self.video_stream_thread = video_stream_thread
         audio_stream_thread.start()
         self.audio_stream_thread = audio_stream_thread
 
-    def receive(self, name, username, video_socket, audio_socket):
-        self.initialize_vid(username, name)
-        self.audio_stream_socket = audio_socket
-        self.video_stream_socket = video_socket
-        video_stream_thread = threading.Thread(target=self.receive_video, args=(name, ))
-        audio_stream_thread = threading.Thread(target=self.receive_audio, args=(name, ))
+    def receive(self, title, username, video_socket, audio_socket):
+        self.initialize_vid(username, title)
+        video_stream_thread = threading.Thread(target=self.receive_video, args=(video_socket, title, ))
+        audio_stream_thread = threading.Thread(target=self.receive_audio, args=(audio_socket, title, ))
         video_stream_thread.start()
         self.video_stream_thread = video_stream_thread
         audio_stream_thread.start()
         self.audio_stream_thread = audio_stream_thread
 
-    def initialize_vid(self, client, name):
-        Video(name, client, os.path.join(os.getcwd(), 'videos', name))
+    def initialize_vid(self, client, title):
+        Video(title, client, os.path.join(VIDEO_FOLDER_ADDRESS, title))
 
     def get_video(self, vid_name):  # todo assumes adrs from name does not use database
-        return os.path.join(os.getcwd(), '../../videos', vid_name)
+        return os.path.join(os.getcwd(), vid_name)
 
-    def send_audio(self, vid_name):  # assumes video has an audio file with the same address
+    def send_audio(self, sckt, vid_name):  # assumes video has an audio file with the same address
         print("Sending Audio ...")
-        video_path = self.get_video(vid_name)
+        video_path = os.path.join(VIDEO_FOLDER_ADDRESS, vid_name)
         audio_path = video_path.replace(".mp4", ".wav")
 
         CHUNK = 4 * 1024
@@ -66,17 +65,17 @@ class ServerVideo:
             data = wf.readframes(CHUNK)
             if data == b'':
                 break
-            self.audio_stream_socket.send(data)
+            sckt.send(data)
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
-    def send_video(self, vid_name):
+    def send_video(self, sckt, vid_name):
         print("Sending Video ...")
 
-        video_path = self.get_video(vid_name)
+        video_path = os.path.join(VIDEO_FOLDER_ADDRESS, vid_name)
         try:
             while True:
-                if self.video_stream_socket:
+                if sckt:
                     vid = cv2.VideoCapture(video_path)
 
                     success = True
@@ -84,7 +83,7 @@ class ServerVideo:
                         success, frame = vid.read()
                         a = pickle.dumps(frame)
                         message = struct.pack("Q", len(a)) + a
-                        self.video_stream_socket.send(message)
+                        sckt.send(message)
                 break
         except:
             print("exception occured! (video)")
@@ -100,9 +99,10 @@ class ServerVideo:
     def save_audio(self, wf2, frame):
         wf2.writeframes(frame)
 
-    def receive_audio(self, name):
-        audio_path = self.get_video(name)
-        wf2 = wave.open(audio_path.replace(".mp4", ".wav"), 'w')
+    def receive_audio(self, sckt, name):
+        audio_path = os.path.join(VIDEO_FOLDER_ADDRESS, name).replace(".mp4", ".wav")
+        print("audio_path:", audio_path)
+        wf2 = wave.open(audio_path, 'w')
 
         wf2.setnchannels(2)  # todo wf.getnchannels()
         wf2.setsampwidth(2)  # todo wf.getsampwidth()
@@ -110,13 +110,14 @@ class ServerVideo:
 
         while True:
             try:
-                frame = self.audio_stream_socket.recv(4 * 1024)
+                frame = sckt.recv(4 * 1024)
                 self.save_audio(wf2, frame)
             except Exception as e:
                 wf2.close()
                 break
+        self.end_streaming(sckt)
 
-    def receive_video(self, name):
+    def receive_video(self, sckt, title):
         print("receiving video...")
 
         data = b""
@@ -127,7 +128,7 @@ class ServerVideo:
         try:
             while True:
                 while len(data) < payload_size:
-                    packet = self.video_stream_socket.recv(4 * 1024)  # 4K
+                    packet = sckt.recv(4 * 1024)  # 4K
                     if not packet: break
                     data += packet
                 packed_msg_size = data[:payload_size]
@@ -135,13 +136,14 @@ class ServerVideo:
                 msg_size = struct.unpack("Q", packed_msg_size)[0]
 
                 while len(data) < msg_size:
-                    data += self.video_stream_socket.recv(4 * 1024)
+                    data += sckt.recv(4 * 1024)
                 frame_data = data[:msg_size]
                 data = data[msg_size:]
                 frame = pickle.loads(frame_data)
 
                 if first_time:
-                    vid_path = os.path.join('videos', name)
+                    vid_path = os.path.join(VIDEO_FOLDER_ADDRESS, title)
+                    print("video_path:", vid_path)
                     height, width, layers = frame.shape
                     video = cv2.VideoWriter(vid_path , fourcc, 24, (width, height))  # todo fix fps, address
                     first_time = False
@@ -151,11 +153,11 @@ class ServerVideo:
         except:
             traceback.print_exc()
             print("upload ended")
-            self.end_streaming()
+            self.end_streaming(sckt)
 
-    def end_streaming(self):
-        self.close_socket(self.video_stream_socket)
-        self.close_socket(self.audio_stream_socket)
+    def end_streaming(self, sckt):
+        self.close_socket(sckt)
+        # self.close_socket(self.audio_stream_socket)
         time.sleep(1)
 
     def close_socket(self, sck: socket.socket):
@@ -199,10 +201,11 @@ class ClientVideo:  # only should have instances in EndUser
         return os.path.join(self.path, path)
 
     def send_audio(self, path):  # specify path from current folder
-        print("Uploading Audio ...")
+        print(f"Uploading Audio ... {path}")
 
         video_path = self.get_video(path)
         audio_path = video_path.replace(".mp4", ".wav")
+        print("video_path:", video_path, "audio_path:", audio_path)
 
         my_clip = mp.VideoFileClip(video_path)
         my_clip.audio.write_audiofile(audio_path)

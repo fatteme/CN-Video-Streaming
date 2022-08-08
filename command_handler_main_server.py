@@ -1,5 +1,6 @@
 import cmd
 from io import StringIO
+import readline
 from unittest import result
 from services.ticket_service import TicketService
 from socket import socket
@@ -16,10 +17,11 @@ class ClientCommandHandler(cmd.Cmd):
 
     user_service = UserService()
     ticket_service = TicketService()
+
+    video_server_service = ServerVideo()
+    video_client_service = ClientVideo()
     video_service = VideoService()
 
-    video_server = ServerVideo()
-    video_client = ClientVideo()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -93,7 +95,8 @@ class ClientCommandHandler(cmd.Cmd):
         video_socket.connect((ip, video_port))
         audio_socket = socket()
         audio_socket.connect((ip, audio_port))
-        self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
+        title = args[0].split("/")[-1]
+        self.video_server_service.receive(title=title, username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
     def do_like(self, arg):
         'like [video_title]'
@@ -114,6 +117,17 @@ class ClientCommandHandler(cmd.Cmd):
         if len(args) != 1:
             return ClientCommandHandler.INVALID_ARGS
         return self.video_service.dislike(args[0])
+    
+    def do_add_comment(self, arg):
+        'add_comment [video_title] [comment_text]'
+        args = parse(arg)
+        user = self.user_service.user
+        if not user:
+            return ClientCommandHandler.NOT_LOGGED_IN
+        if len(args) < 1:
+            return ClientCommandHandler.INVALID_ARGS
+        comment = " ".join(args[1:])
+        return self.video_service.add_comment(video_title=args[0], user=user.username, comment=comment)
 
     def do_video_info(self, arg):
         'video_info [video_title]'

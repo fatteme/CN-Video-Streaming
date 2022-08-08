@@ -46,7 +46,7 @@ class ClientCommandHandler(cmd.Cmd):
 
     def do_exit(self, arg):
         'type q to exit'
-        return '', False
+        return '', False    
 
     def do_reply_ticket(self, arg):
         'reply [ticketid] [text]'
@@ -68,6 +68,18 @@ class ClientCommandHandler(cmd.Cmd):
 
     def do_open_tickets(self, arg):
         'open_tickets'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_permissions(self, arg):
+        'permissions'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_approve(self, arg):
+        'approve [username]'
         if not self.has_logged_in():
             return OUT_OF_NETWORK_ERROR, False
         return self.user_service.user.username, True
