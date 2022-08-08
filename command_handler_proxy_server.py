@@ -71,7 +71,13 @@ class ClientCommandHandler(cmd.Cmd):
         if not self.has_logged_in():
             return OUT_OF_NETWORK_ERROR, False
         return self.user_service.user.username, True
-        
+
+    def do_label(self, arg):
+        'label [title] [text]'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
 
 def parse(arg):
     return arg.split()

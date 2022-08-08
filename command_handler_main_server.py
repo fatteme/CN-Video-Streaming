@@ -207,5 +207,14 @@ class ProxyCommandHandler(cmd.Cmd):
         'type q to exit'
         return ''
 
+    def do_label(self, arg):
+        'label [title] [text] user'
+        valid, approved = self.user_service.is_approved_admin(arg[1])
+        if not valid:
+            return "Username invalid!"
+        if not approved:
+            return "You are not approved by the super user!"
+
+
 def parse(arg):
     return arg.split()
