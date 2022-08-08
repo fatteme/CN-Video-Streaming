@@ -16,10 +16,11 @@ class ClientCommandHandler(cmd.Cmd):
 
     user_service = UserService()
     ticket_service = TicketService()
+
+    video_server_service = ServerVideo()
+    video_client_service = ClientVideo()
     video_service = VideoService()
 
-    video_server = ServerVideo()
-    video_client = ClientVideo()
 
     def do_help(self, arg: str) -> str:
         'help or ?'
@@ -93,7 +94,8 @@ class ClientCommandHandler(cmd.Cmd):
         video_socket.connect((ip, video_port))
         audio_socket = socket()
         audio_socket.connect((ip, audio_port))
-        self.video_server.receive(name=args[0], username=user.username, video_socket=video_socket, audio_socket=audio_socket)
+        title = args[0].split("/")[-1]
+        self.video_server_service.receive(title=title, username=user.username, video_socket=video_socket, audio_socket=audio_socket)
     
     def do_like(self, arg):
         'like [video_title]'
@@ -143,6 +145,7 @@ class ProxyCommandHandler(cmd.Cmd):
     prompt = '(turtle) '
     user_service = UserService()
     ticket_service = TicketService()
+    video_service = VideoService()
 
     def set_user(self, username):
         self.user_service.set_proxy_user(username=username)
@@ -204,12 +207,16 @@ class ProxyCommandHandler(cmd.Cmd):
         return result
 
     def do_label(self, arg):
-        'label [title] [text] user'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
+        'label [title] [text] [username]'
+        args = arg.split()
+        valid, approved = self.user_service.is_approved_admin(args[2])
         if not valid:
             return "Username invalid!"
         if not approved:
             return "You are not approved by the super user!"
+        if len(args) != 3:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.label(args[0], args[1])
 
 
 def parse(arg):

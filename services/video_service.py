@@ -24,6 +24,12 @@ class VideoService:
         self.videoDBService.update_video(video=video)
         return f'video disliked!, dislikes: {video.dislikes}'
 
+    def label(self, title, label):
+        video: Video = self.videoDBService.get_video(title=title)
+        video.label = label
+        self.videoDBService.update_video(video=video)
+        return f'video label added. label: {video.label}'
+
     def add_comment(self, video_title, user, comment):
         self.commentDBService.add_comment(Comment(user=user, video=video_title, text=comment))
         return f'comment added!, comment: {comment}'

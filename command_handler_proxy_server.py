@@ -51,7 +51,7 @@ class ClientCommandHandler(cmd.Cmd):
 
     def do_exit(self, arg):
         'type q to exit'
-        return '', False
+        return '', False    
 
     def forward_req(self):
         if not self.has_logged_in():
@@ -81,6 +81,18 @@ class ClientCommandHandler(cmd.Cmd):
     def do_open_tickets(self, arg):
         'open_tickets'
         return self.forward_req()
+
+    def do_permissions(self, arg):
+        'permissions'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
+
+    def do_approve(self, arg):
+        'approve [username]'
+        if not self.has_logged_in():
+            return OUT_OF_NETWORK_ERROR, False
+        return self.user_service.user.username, True
 
     def do_label(self, arg):
         'label [title] [text]'
