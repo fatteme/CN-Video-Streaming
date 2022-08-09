@@ -1,5 +1,7 @@
 import socket
 import sys
+import threading
+
 from consts import HOST, PORT, EXIT_MESSAGE, PORT_P_PROXY_SEREVR, PORT_P_MAIN_SERVER
 from random import randint
 import time
@@ -40,6 +42,13 @@ if(decoded_res == EXIT_MESSAGE):
     exit()
 print(f"{decoded_res}")
 
+def listen(command, video_socket, audio_socket):
+    video_client, _ = video_socket.accept()
+    audio_client, _ = audio_socket.accept()
+
+    time.sleep(1)
+    name = command.split()[1]
+    video_client_service.send(video_socket=video_client, audio_socket=audio_client, name=name)
 
 def preprocess(command, sckt):
     keyword = command.split()[0]
@@ -48,18 +57,12 @@ def preprocess(command, sckt):
         command += f' {HOST} {video_port}'
         sckt.send(str.encode(command))
 
-        video_client, _ = video_socket.accept()
-        audio_client, _ = audio_socket.accept()
-
-        time.sleep(1)
-        name = command.split()[1]
-        video_client_service.send(video_socket=video_client, audio_socket=audio_client, name=name)
+        stream_thread = threading.Thread(target=listen, args=(command, video_socket, audio_socket, ))
+        stream_thread.start()
 
         response = sckt.recv(1024)
         decoded_res = response.decode('utf-8')
         print(decoded_res)
-        video_socket.close()
-        audio_socket.close()
         return True
     elif keyword == "watch":
         # 'upload [title] [ip] [video_port]
