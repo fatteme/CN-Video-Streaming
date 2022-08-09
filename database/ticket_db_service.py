@@ -28,8 +28,8 @@ class TicketDBService:
     def update_ticket(self, id, update_dict: dict):
         query = f"UPDATE {self.table} SET"
         for attr in update_dict:
-            query += f" {attr} = %s"
-        query += " WHERE id = %s"
+            query += f" {attr} = %s,"
+        query = query[:-1] + " WHERE id = %s"
 
         values = tuple(list(update_dict.values()) + [id])
 
@@ -50,12 +50,12 @@ class TicketDBService:
         return Ticket.from_tuple(result)
 
     def get_all_open_tickets(self):
-        query = f"SELECT * from {self.table} WHERE NOT state = CLOSED"
+        query = f"SELECT * from {self.table} WHERE NOT state = 'CLOSED'"
         values = tuple()
 
         cursor = self.connector.cursor()
         cursor.execute(query, values)
-        results = cursor.fetchone()
+        results = cursor.fetchall()
         for result in results:
             yield Ticket.from_tuple(result)
 
@@ -65,6 +65,6 @@ class TicketDBService:
 
         cursor = self.connector.cursor()
         cursor.execute(query, values)
-        results = cursor.fetchone()
+        results = cursor.fetchall()
         for result in results:
             yield Ticket.from_tuple(result)

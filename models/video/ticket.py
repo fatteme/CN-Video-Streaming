@@ -1,3 +1,4 @@
+import traceback
 from uuid import uuid4
 import enum
 
@@ -14,6 +15,7 @@ class Ticket:
     @staticmethod
     def from_tuple(t):
         try:
+            print(t)
             ticket = Ticket(t[1], t[3])
             ticket.id = t[0]
             ticket.assignee = t[2]
@@ -21,6 +23,7 @@ class Ticket:
             ticket.state = t[5]
             return ticket
         except:
+            traceback.print_exc()
             return None
 
 class TicketState(enum.Enum):

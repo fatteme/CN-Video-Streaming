@@ -48,11 +48,11 @@ class TicketService:
     def get_all_open_tickets(self):
         result = "Ticket ID, User, Assignee, State, text, reply\n"
         for ticket in self.ticket_db_service.get_all_open_tickets():
-            result += str(tuple(ticket.id, ticket.user, ticket.assignee, ticket.state, ticket.text, ticket.reply)) + "\n"
+            result += str(tuple([ticket.id, ticket.user, ticket.assignee, ticket.state, ticket.text, ticket.reply])) + "\n"
         return result
         
     def get_all_user_tickets(self, username):
         result = "Ticket ID, Assignee, State, text, reply\n"
         for ticket in self.ticket_db_service.get_all_user_tickets(username):
-            result += str(tuple(ticket.id, ticket.assignee, ticket.state, ticket.text, ticket.reply)) + "\n"
+            result += str(tuple([ticket.id, ticket.assignee, ticket.state, ticket.text, ticket.reply])) + "\n"
         return result

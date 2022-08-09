@@ -25,7 +25,7 @@ class UserService:
 
     def get_end_user(self, username, password):
         user = self.userDBService.get_user(username=username)
-        if user.is_admin:
+        if isinstance(user, Admin):
             return 'username does not belong to an end user.'
         if not user.is_approved:
             return 'this account needs admin approval to proceed.'
