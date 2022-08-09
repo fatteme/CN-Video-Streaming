@@ -10,7 +10,7 @@ class CommentDBService:
             # password=config["password"],
             database=config["database"]
             )
-        self.table = "Comment"
+        self.table = "comment"
 
     def add_comment(self, comment: Comment):
         query = f"INSERT INTO {self.table} (username, video, text) Values (%s, %s, %s)"

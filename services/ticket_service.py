@@ -14,14 +14,14 @@ class TicketService:
         if assignee:
             ticket.assignee = assignee
         self.ticket_db_service.create_ticket(ticket)
-        return "Ticket {ticket.id} created successfully!"
+        return f"Ticket {ticket.id} created successfully!"
     
     def reply_to_ticket(self, ticket_id, reply_text, username):
         ticket = self.ticket_db_service.get_ticket(ticket_id)
         if not ticket:
             return "Invalid ticket id!"
         if ticket.assignee and ticket.assignee != username:
-            return "This ticket was already replied to!"
+            return "You can't reply to this ticket!"
         if ticket.state == TicketState.CLOSED.value:
             return "The ticket is already closed and can't be modified!"
         self.ticket_db_service.update_ticket(ticket_id, {
@@ -30,12 +30,12 @@ class TicketService:
         })
         return "Reply submitted succesfully!"
     
-    def set_ticket_state(self, ticket_id, state, end_user=None):
+    def set_ticket_state(self, ticket_id, state, user=None):
         ticket = self.ticket_db_service.get_ticket(ticket_id)
         if not ticket:
             return "Invalid ticket id!"
-        if end_user and end_user != ticket.user:
-            return "You are not authorized to change tickets no initially created by you!"
+        if user and user != ticket.user and user != "manager":
+            return "You are not authorized to change tickets not initially created by you!"
         if not TicketState.is_valid(state):
             return "Not a valid state! Please Choose from one of the following options: (NEW|PENDING|RESOLVED|CLOSED)."
         if ticket.state == TicketState.CLOSED.value:

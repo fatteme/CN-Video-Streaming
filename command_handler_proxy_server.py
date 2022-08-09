@@ -67,7 +67,7 @@ class ClientCommandHandler(cmd.Cmd):
         return self.forward_req()
 
     def do_ticket(self, arg):
-        'ticket [username] [text]'
+        'ticket [text]'
         return self.forward_req()
 
     def do_reply_ticket(self, arg):

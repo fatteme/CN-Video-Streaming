@@ -1,4 +1,5 @@
 import socket
+from threading import Lock
 import threading
 from database.video_db_service import VideoDBService
 
@@ -23,6 +24,8 @@ from consts import HOST, PORT, EXIT_MESSAGE
 class ServerVideo:
 
     video_db_service = VideoDBService(DB_CONFIG)
+    video_lock = Lock()
+    audio_lock = Lock()
 
     def send(self, path,  video_socket, audio_socket):
         video_stream_thread = threading.Thread(target=self.send_video, args=(video_socket, path))
@@ -44,6 +47,7 @@ class ServerVideo:
         return os.path.join(os.getcwd(), vid_name)
 
     def send_audio(self, sckt, video_path):  # assumes video has an audio file with the same address
+        self.audio_lock.acquire()
         print("Sending Audio ...")
         audio_path = video_path.replace(".mp4", ".wav")
         print("audio_path:", audio_path)
@@ -62,7 +66,10 @@ class ServerVideo:
             time.sleep(0.8 * CHUNK / sample_rate)
         wf.close()
 
+        self.audio_lock.release()
+
     def send_video(self, sckt, video_path):
+        self.video_lock.acquire()
         print("Sending Video ...")
 
         try:
@@ -84,6 +91,8 @@ class ServerVideo:
         if vid:
             vid.release()
             cv2.destroyAllWindows()
+        
+        self.video_lock.release()
 
     def save_video(self, video, frame):
         video.write(frame)
