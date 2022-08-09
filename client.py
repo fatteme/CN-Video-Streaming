@@ -74,11 +74,12 @@ def preprocess(command, sckt):
 
         video_client_service.receive(video_socket=video_client, audio_socket=audio_client)
 
+        print("ready to recieve end of stream signal ..")
         response = sckt.recv(1024)
         decoded_res = response.decode('utf-8')
-        print(decoded_res)
-        video_socket.close()
-        audio_socket.close()
+        print("Decoded_res:", decoded_res)
+        video_client.close()
+        audio_client.close()
         return True
     return False
 

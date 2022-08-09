@@ -2,6 +2,7 @@ import cmd
 from io import StringIO
 
 import os
+from time import time, sleep
 from database.video_db_service import VideoDBService
 from models.video.video import Video
 from services.ticket_service import TicketService
@@ -67,7 +68,7 @@ class ClientCommandHandler(cmd.Cmd):
         if not self.user_service.user:
             return ClientCommandHandler.NOT_LOGGED_IN
         args = parse(arg)
-        result = self.ticket_service.create_ticket(args[0], self.user_service.user.username)
+        result = self.ticket_service.create_ticket(self.user_service.user.username, args[0])
         return result
 
     def do_set_ticket_state(self, arg):
@@ -133,6 +134,12 @@ class ClientCommandHandler(cmd.Cmd):
         except:
             return "Video not found!"
         self.video_server_service.send(path=video.adrs, video_socket=video_socket, audio_socket=audio_socket)
+
+        sleep(1)
+        self.video_server_service.video_lock.acquire()
+        self.video_server_service.video_lock.release()
+        self.video_server_service.audio_lock.acquire()
+        self.video_server_service.audio_lock.release()
         return "End of the video."
     
     def do_like(self, arg):
@@ -220,9 +227,9 @@ class ProxyCommandHandler(cmd.Cmd):
         if len(args) < 2:
             return self.INVALID_ARGS
         self.set_user(args[-1])
-        text = " ".join(args[1:-1])
+        text = " ".join(args[:-1])
         # assignee is None, so its superuser
-        result = self.ticket_service.create_ticket(username=args[-1], text=text)
+        result = self.ticket_service.create_ticket(username=args[-1], text=text, assignee="manager")
         return result
 
     def do_reply_ticket(self, arg):
@@ -245,7 +252,7 @@ class ProxyCommandHandler(cmd.Cmd):
         if args[1] not in ["NEW", "PENDING", "RESOLVED", "CLOSED"]:
             return self.INVALID_ARGS
         self.set_user(args[-1])
-        result = self.ticket_service.set_ticket_state(ticket_id=args[0], state=args[1])
+        result = self.ticket_service.set_ticket_state(ticket_id=args[0], state=args[1], user=args[-1])
         return result
 
     def do_open_tickets(self, arg):
