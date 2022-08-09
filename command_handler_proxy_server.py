@@ -35,6 +35,11 @@ class ClientCommandHandler(cmd.Cmd):
         'logout'
         self.user_service.logout()
         return f'logout successfull.', False
+    
+    def do_whoami(self, arg):
+        'whoami'
+        user = self.user_service.user
+        return user.username if user else 'No one is logged in', False
 
     def do_signup(self, arg):
         'signup [username] [password]'
@@ -48,47 +53,46 @@ class ClientCommandHandler(cmd.Cmd):
         'type q to exit'
         return '', False    
 
-    def do_reply_ticket(self, arg):
-        'reply [ticketid] [text]'
+    def forward_req(self):
         if not self.has_logged_in():
             return OUT_OF_NETWORK_ERROR, False
         return self.user_service.user.username, True
+    
+    def do_permissions(self, arg):
+        'permissions'
+        return self.forward_req()
+    
+    def do_approve(self, arg):
+        'approve [username]'
+        return self.forward_req()
 
     def do_ticket(self, arg):
-        'ticket [text] [username]'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
+        'ticket [username] [text]'
+        return self.forward_req()
+
+    def do_reply_ticket(self, arg):
+        'reply_ticket [ticketid] [text]'
+        return self.forward_req()
 
     def do_set_ticket_state(self, arg):
-        'set_ticket_state [ticketid] [state] [username]'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
+        'set_ticket_state [ticketid] [state]'
+        return self.forward_req()
 
     def do_open_tickets(self, arg):
         'open_tickets'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
-
-    def do_permissions(self, arg):
-        'permissions'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
-
-    def do_approve(self, arg):
-        'approve [username]'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
+        return self.forward_req()
 
     def do_label(self, arg):
-        'label [title] [text]'
-        if not self.has_logged_in():
-            return OUT_OF_NETWORK_ERROR, False
-        return self.user_service.user.username, True
+        'label [video_title] [text]'
+        return self.forward_req()
+
+    def do_remove(self, arg):
+        'remove [video_title]'
+        return self.forward_req()
+    
+    def do_unstrike(self, arg):
+        'unstrike [username]'
+        return self.forward_req()
 
 
 def parse(arg):

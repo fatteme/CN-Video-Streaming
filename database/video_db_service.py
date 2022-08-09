@@ -29,7 +29,7 @@ class VideoDBService:
             print(e)
 
     def update_video(self, video: Video):
-        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s, WHERE title = %s"
+        query = f"UPDATE {self.table} SET name_identifier = %s, adrs = %s, available= %s, likes = %s, dislikes = %s, label = %s WHERE title = %s"
         values = (video.name_identifier, video.adrs, video.available, video.likes, video.dislikes, video.label, video.title)
 
         cursor = self.connector.cursor()
@@ -47,3 +47,12 @@ class VideoDBService:
         return Video(title=result[0], name_identifier=result[1],
             owner=result[2], adrs=result[3], availabe=result[4], likes=result[5],
             dislikes=result[6], label=result[7])
+
+    def delete_video(self, title):
+        query = f"DELETE from {self.table} WHERE title = %s"
+        values = (title,)
+        cursor = self.connector.cursor()
+        cursor.execute(query, values)
+        self.connector.commit()
+        
+        print(cursor.rowcount, "record(s) affected")

@@ -1,17 +1,19 @@
 import cmd
 from io import StringIO
+
 import os
-import readline
-from unittest import result
 from database.video_db_service import VideoDBService
 from models.video.video import Video
 from services.ticket_service import TicketService
 from socket import socket
-from services.video_service import VideoService
-from video_handler import ServerVideo, ClientVideo
 
 from services.user_service import UserService
-from consts import DB_CONFIG, SUPERUSER, VIDEO_FOLDER_ADDRESS
+from consts import DB_CONFIG, VIDEO_FOLDER_ADDRESS
+from services.ticket_service import TicketService
+from services.user_service import UserService
+from services.video_service import VideoService
+from video_handler import ClientVideo, ServerVideo
+
 
 class ClientCommandHandler(cmd.Cmd):
     INVALID_ARGS = f'invalid arguments'
@@ -93,6 +95,9 @@ class ClientCommandHandler(cmd.Cmd):
             return ClientCommandHandler.NOT_LOGGED_IN
         if len(args) != 3:
             return ClientCommandHandler.INVALID_ARGS
+        print(user.strikes)
+        if int(user.strikes) >= 2:
+            return f'Unable to upload video due to strikes'
         ip, video_port = args[1], int(args[2])
         audio_port = video_port + 1
         video_socket = socket()
@@ -168,7 +173,15 @@ class ClientCommandHandler(cmd.Cmd):
         user = self.user_service.user
         if len(args) != 1:
             return ClientCommandHandler.INVALID_ARGS
-        return self.video_service.get_video(args[0])        
+        return self.video_service.get_video(args[0])    
+
+    def do_video_labels(self, arg):
+        'video_labels [video_title]'
+        args = parse(arg)
+        user = self.user_service.user
+        if len(args) != 1:
+            return ClientCommandHandler.INVALID_ARGS
+        return self.video_service.get_video_labels(args[0])        
 
     def do_exit(self, arg):
         'type q to exit'
@@ -179,77 +192,99 @@ class ProxyCommandHandler(cmd.Cmd):
     prompt = '(turtle) '
     user_service = UserService()
     ticket_service = TicketService()
+    video_service = VideoService()
 
-    def do_help(self, arg: str) -> str:
-        'help or ?'
-        help_output = StringIO()
-        super().__setattr__('stdout', help_output)
-        super().do_help(arg)
-        return help_output.getvalue()
+    def set_user(self, username):
+        self.user_service.set_proxy_user(username=username)
     
     def do_permissions(self, arg):
         'permissions'
-        return f'here is the signup permission list:\n {self.user_service.get_unapproved_users()}'
+        # 'permissions [admin]' admin is embedded in app
+        args = parse(arg)
+        self.set_user(args[-1])
+        unapproved_users = self.user_service.get_unapproved_users()
+        return f'here is the signup permission list:\n {unapproved_users}' if unapproved_users else 'there is no unapproved user'
 
     def do_approve(self, arg):
         'approve [username]'
+        # 'approve [username] [admin]' admin is embedded in app
         args = parse(arg)
-        if len(args) < 1:
+        if len(args) < 2:
             return self.INVALID_ARGS
+        self.set_user(args[-1])
         return self.user_service.approve(args[0])
 
     def do_ticket(self, arg):
-        'ticket [text] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.create_ticket(arg[0], arg[1], SUPERUSER)
+        'ticket [text]'
+        # 'ticket [text] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 2:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        text = " ".join(args[1:-1])
+        # assignee is None, so its superuser
+        result = self.ticket_service.create_ticket(username=args[-1], text=text)
         return result
 
     def do_reply_ticket(self, arg):
-        'reply_ticket [ticketid] [text] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.reply_to_ticket(arg[0], " ".join(arg[1:-1], arg[-1]))
+        'reply_ticket [ticketid] [text]'
+        # 'reply_ticket [ticketid] [text] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 3:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        text = " ".join(args[1:-1])
+        result = self.ticket_service.reply_to_ticket(ticket_id=args[0], reply_text=text, username=args[-1])
         return result
 
     def do_set_ticket_state(self, arg):
-        'set_ticket_state [ticketid] [state] [username]'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
-        result = self.ticket_service.set_ticket_state(arg[0], arg[1])
+        'set_ticket_state [ticketid] [state]'
+        # 'set_ticket_state [ticketid] [state] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) < 3:
+            return self.INVALID_ARGS
+        if args[1] not in ["NEW", "PENDING", "RESOLVED", "CLOSED"]:
+            return self.INVALID_ARGS
+        self.set_user(args[-1])
+        result = self.ticket_service.set_ticket_state(ticket_id=args[0], state=args[1])
         return result
 
     def do_open_tickets(self, arg):
         'open_tickets'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
+        # 'open_tickets [admin]' admin is embedded in app
+        args = parse(arg)
+        self.set_user(args[-1])
         result = self.ticket_service.get_all_open_tickets()
         return result
 
-    def do_exit(self, arg):
-        'type q to exit'
-        return ''
-
     def do_label(self, arg):
-        'label [title] [text] user'
-        valid, approved = self.user_service.is_approved_admin(arg[1])
-        if not valid:
-            return "Username invalid!"
-        if not approved:
-            return "You are not approved by the super user!"
+        'label [video_title] [text]'
+        # 'label [video_title] [text] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) != 3:
+            return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
+        return self.video_service.label(args[0], args[1])
+    
+    def do_remove(self, arg):
+        'remove [video_title]'
+        # 'remove [video_title] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) != 2:
+            return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
+        username = self.video_service.get_video_owner(args[0])
+        
+        return f'{self.video_service.remove_video(args[0])}\n{self.user_service.add_strike(username=username)}'
 
+    def do_unstrike(self, arg):
+        'unstrike [username]'
+        # 'unstrike [username] [admin]' admin is embedded in app
+        args = parse(arg)
+        if len(args) != 2:
+            return ClientCommandHandler.INVALID_ARGS
+        self.set_user(args[-1])
+        return self.user_service.unstrike_user(args[0])
 
 def parse(arg):
     return arg.split()

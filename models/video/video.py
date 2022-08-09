@@ -15,6 +15,7 @@ class Video:
         self.comments = []
         self.label = label
 
+
     def export(self):
         return {
             "title": self.title,
@@ -24,8 +25,8 @@ class Video:
             "available": self.available,
             "likes": self.likes,
             "dislikes": self.dislikes,
-            "comments": self.comments,
-            "label": self.label
+            "label": self.label,
+            "comments": self.comments
         }
 
     @staticmethod
@@ -36,6 +37,6 @@ class Video:
         v.available = d["available"]
         v.likes = d["likes"]
         v.dislikes = d["dislikes"]
-        v.comments = d["comments"]
         v.label = d["label"]
+        v.comments = d["comments"]
         return v

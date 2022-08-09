@@ -9,12 +9,12 @@ class TicketService:
     def __init__(self):
         self.ticket_db_service = TicketDBService(config=DB_CONFIG)
 
-    def create_ticket(self, text, username, assignee=None):
+    def create_ticket(self, username, text ,assignee=None):
         ticket = Ticket(username, text)
         if assignee:
             ticket.assignee = assignee
         self.ticket_db_service.create_ticket(ticket)
-        return "Ticket created successfully!"
+        return "Ticket {ticket.id} created successfully!"
     
     def reply_to_ticket(self, ticket_id, reply_text, username):
         ticket = self.ticket_db_service.get_ticket(ticket_id)

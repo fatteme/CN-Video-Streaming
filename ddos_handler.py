@@ -1,7 +1,7 @@
 from datetime import datetime
 class DDosHandler():
     # 10 requests per minute
-    REQUEST_THRESHOLD = 10
+    REQUEST_THRESHOLD = 100
 
     def __init__(self) -> None:
         self.ips = {}
